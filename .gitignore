@@ -50,6 +50,9 @@ next-env.d.ts
 # git worktrees (parallel Claude Code sessions)
 .worktrees/
 
+# accidental nested clone of this repo (safe to delete)
+/123456/
+
 # raw video source for the hero (8K/60fps original — kept locally as the
 # editing source; the deployed asset is the compressed public/hero.mp4)
 /bbb*.mp4
