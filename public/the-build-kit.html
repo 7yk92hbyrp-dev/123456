@@ -1,0 +1,331 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Build Kit · Build the logger yourself</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#000; --fg:#fff;
+  --mint:#6EE7B7; --mint-deep:#1f4d3d; --mint-cool:#A7F3D0; --mint-ink:#042a1c;
+  --amber:#F59E0B;
+  --muted:rgba(255,255,255,0.5); --muted-strong:rgba(255,255,255,0.72);
+  --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.16);
+  --card:rgba(255,255,255,0.02);
+  --radius-card:18px; --radius-pill:999px;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --ease-premium:cubic-bezier(0.16,1,0.3,1);
+  --spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:rgba(110,231,183,0.25);color:#fff}
+
+.atmos{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 55% 45% at 50% 12%, rgba(110,231,183,0.10), rgba(110,231,183,0.03) 45%, transparent 70%),radial-gradient(ellipse 120% 80% at 50% 100%, rgba(14,38,30,0.4), rgba(0,0,0,0.95));}
+.atmos::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(110,231,183,0.045) 1px,transparent 1px),linear-gradient(90deg,rgba(110,231,183,0.045) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(ellipse 85% 60% at 50% 22%,#000,transparent 74%);mask-image:radial-gradient(ellipse 85% 60% at 50% 22%,#000,transparent 74%);opacity:.6;animation:gridDrift 50s linear infinite}
+@keyframes gridDrift{to{background-position:46px 46px}}
+
+.kit{position:relative;z-index:5;max-width:700px;margin:0 auto;padding:clamp(26px,5vw,48px) clamp(18px,5vw,34px) 96px}
+
+.kit-head{text-align:center;margin-bottom:8px}
+.eyebrow{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.24em;color:var(--mint);margin-bottom:11px;opacity:0;animation:fade .7s var(--ease-premium) .05s forwards}
+.kit-title{font-family:var(--serif);font-weight:400;font-size:clamp(2.3rem,8vw,3.2rem);line-height:.98;letter-spacing:-.01em;opacity:0;animation:rise .8s var(--ease-premium) .12s forwards}
+.kit-idea{margin:14px auto 0;max-width:38ch;font-size:.98rem;line-height:1.55;color:var(--muted-strong);opacity:0;animation:rise .8s var(--ease-premium) .22s forwards}
+.hl{font:inherit;font-weight:600;color:var(--mint-cool);position:relative;white-space:nowrap;padding:1px 4px;border-radius:6px}
+.hl::before{content:'';position:absolute;inset:0;border-radius:6px;z-index:-1;background:rgba(110,231,183,0.16);transform-origin:left center;transform:scaleX(0);animation:sweep .7s var(--ease-premium) .6s forwards}
+@keyframes sweep{to{transform:scaleX(1)}}
+.kit-tagline{margin-top:13px;font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.22em;color:var(--muted);opacity:0;animation:fade .9s var(--ease-premium) .32s forwards}
+
+/* how it works strip */
+.how{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:24px 0 8px;opacity:0;animation:fade .8s var(--ease-premium) .4s forwards}
+.how span{font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-pill);padding:7px 13px}
+.how b{color:var(--mint);font-weight:500}
+
+/* section marks */
+.sect{margin:38px 0 14px;text-align:center}
+.sect .k{font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.2em;color:var(--mint)}
+.sect h2{font-family:var(--serif);font-weight:400;font-size:1.7rem;margin-top:7px;line-height:1.1}
+.sect p{margin:8px auto 0;max-width:44ch;font-size:.86rem;line-height:1.5;color:var(--muted)}
+
+/* prompt cards */
+.pcard{position:relative;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);margin-bottom:12px;overflow:hidden;opacity:0;transform:translateY(12px);animation:cardIn .6s var(--ease-premium) forwards;animation-delay:calc(var(--i,0)*60ms + .1s);transition:border-color .4s,box-shadow .4s}
+.pcard:hover{border-color:rgba(110,231,183,0.28);box-shadow:0 0 44px rgba(110,231,183,0.07)}
+@keyframes cardIn{to{opacity:1;transform:none}}
+.pcard .hd{display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.pnum{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(110,231,183,0.08);border:1px solid rgba(110,231,183,0.18);color:var(--mint);font-family:var(--mono);font-size:.7rem}
+.pcard .ttl{flex:1;min-width:0}
+.pcard .ttl b{display:block;font-family:var(--serif);font-weight:400;font-size:1.18rem;line-height:1.1}
+.pcard .ttl i{font-style:normal;font-family:var(--mono);font-size:.5rem;text-transform:uppercase;letter-spacing:.13em;color:var(--muted)}
+.chev{flex:none;color:var(--muted);transition:transform .35s var(--ease-premium)}
+.pcard.open .chev{transform:rotate(180deg)}
+.pcard .body{max-height:0;overflow:hidden;transition:max-height .55s var(--ease-premium)}
+.pcard.open .body{max-height:720px}
+.pcard pre{margin:0 16px;background:#070808;border:1px solid var(--border);border-radius:12px;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:.7rem;line-height:1.65;color:#c9d2cc;white-space:pre-wrap}
+.pcard .body-pad{padding-bottom:16px}
+
+/* the spark copy button */
+.copy-btn{appearance:none;display:flex;width:calc(100% - 32px);margin:10px 16px 0;align-items:center;justify-content:center;gap:9px;border:1px solid var(--border-strong);background:rgba(255,255,255,0.02);color:var(--fg);font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;padding:12px;border-radius:11px;cursor:pointer;position:relative;overflow:hidden;transition:border-color .25s,background .25s,color .25s}
+.copy-btn svg{width:15px;height:15px;color:var(--muted);transition:color .25s,transform .45s var(--spring)}
+.copy-btn:hover{border-color:rgba(110,231,183,0.4)} .copy-btn:hover svg{color:var(--mint)}
+.copy-btn.copied{border-color:var(--mint);background:rgba(110,231,183,0.1);color:var(--mint)}
+.copy-btn.copied svg{color:var(--mint);transform:scale(1.18)}
+.copy-btn .ring{position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--mint);transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none}
+.copy-btn.spark .ring{animation:charge .55s var(--ease-premium)}
+@keyframes charge{0%{transform:translate(-50%,-50%) scale(0);opacity:.7}100%{transform:translate(-50%,-50%) scale(26);opacity:0}}
+
+/* progress rail */
+.rail{position:fixed;left:0;top:0;height:2px;background:var(--mint);z-index:50;width:0;box-shadow:0 0 12px rgba(110,231,183,.6);transition:width .2s}
+
+/* theme passport callout */
+.passport{border:1px solid rgba(110,231,183,0.22);border-radius:var(--radius-card);background:rgba(110,231,183,0.04);padding:18px 18px 6px;margin-bottom:12px;opacity:0;transform:translateY(12px);animation:cardIn .6s var(--ease-premium) .08s forwards}
+.passport .pk{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.55rem;text-transform:uppercase;letter-spacing:.16em;color:var(--mint);margin-bottom:8px}
+.passport .pk .dot{width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint)}
+.passport p{font-size:.84rem;line-height:1.55;color:var(--muted-strong);margin-bottom:12px}
+.passport p b{color:var(--mint-cool);font-weight:500}
+
+.kit-foot{margin-top:42px;text-align:center}
+.foot-rule{width:38px;height:1px;background:linear-gradient(90deg,transparent,var(--mint),transparent);margin:0 auto 18px;opacity:.6}
+.foot-line{font-family:var(--serif);font-size:1.45rem;line-height:1.28;max-width:24ch;margin:0 auto}
+.foot-cue{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-pill);padding:8px 15px}
+.foot-cue .dot{width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint)}
+
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
+@keyframes fade{to{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+
+<div class="rail" id="rail"></div>
+<div class="atmos"></div>
+<main class="kit">
+
+  <header class="kit-head">
+    <p class="eyebrow">Free Build Kit · from the video</p>
+    <h1 class="kit-title">Build the logger yourself</h1>
+    <p class="kit-idea">The exact prompts from the video. Paste them into Claude <span class="hl">one at a time</span>, top to bottom, and watch your logger build itself.</p>
+    <p class="kit-tagline">No code needed · one single file · yours forever</p>
+  </header>
+
+  <div class="how">
+    <span><b>1</b> · copy a prompt</span>
+    <span><b>2</b> · paste into Claude</span>
+    <span><b>3</b> · watch it appear</span>
+  </div>
+
+  <!-- BASE -->
+  <div class="sect">
+    <span class="k">Start here · build once</span>
+    <h2>The base</h2>
+    <p>This first prompt sets the whole look. Every prompt after inherits it, so your logger comes out on-theme without repeating yourself.</p>
+  </div>
+
+  <div class="passport">
+    <div class="pk"><span class="dot"></span>Why this prompt is longer</div>
+    <p>It carries the <b>theme passport</b>: the exact colors, fonts, and feel. Set it once here and every prompt after just names the next feature — the look carries itself. This is the trick that makes the whole build come out designed instead of default.</p>
+  </div>
+
+  <article class="pcard open" style="--i:0">
+    <div class="hd"><span class="pnum">0</span><span class="ttl"><b>The single-file shell</b><i>theme passport · offline · saves in the browser</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>Build a workout app as ONE single index.html file. No build step, works offline,
+and it saves everything in the browser so it is still there when I reload.
+
+THE THEME. Follow this exactly, for everything we build from here on:
+- The feel: a premium, editorial take on the Apple Health app. Near-black and calm
+  but alive, like a beautifully typeset magazine that happens to be an app.
+- Background pure black (#000), but never flat: a soft dark-green glow near the top
+  that fades to black, plus a barely-there grain. No gray panels, no bright gradients.
+- Two accents, both earned, never used just to decorate:
+    Mint (#6EE7B7) means "yes" — winning, live numbers, the primary action. A done or
+    beaten set fills solid mint and flips its text to near-black ink (#042a1c).
+    Amber (#F59E0B) means "notable" — a personal record, or something worth a look.
+- Type is the personality:
+    Instrument Serif for display — big titles, exercise names, small italic labels.
+    Inter for the data — weights and reps big and bold, the hero of every row.
+    A mono (JetBrains Mono) only for tiny UPPERCASE meta, e.g. "LAST 85 KG · 4 × 5".
+- Big rounded cards (18px), fully-round pills (999px), hairline borders (white at 8%),
+  and lots of breathing room. Motion soft and premium, never bouncy or flashy.
+- Mobile first: one thumb-friendly column, big tap targets.
+
+For now just build the shell: a clean title bar (today's date small in mono, and a
+big serif title) with an empty "today" area below it. Nothing else yet — we add
+one piece at a time.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 0</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <!-- EP1 -->
+  <div class="sect">
+    <span class="k">Part 1 · progressive overload</span>
+    <h2>The proof you are winning</h2>
+  </div>
+
+  <article class="pcard" style="--i:1">
+    <div class="hd"><span class="pnum">1.1</span><span class="ttl"><b>Log a lift</b><i>weight · reps · saved history</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>Let me pick an exercise and log sets under it — each set a weight and reps.
+Show the sets as a stack of rounded pills: a small roman numeral (i, ii, iii),
+then the weight and reps big in Inter. Keep the full history of every set for
+every exercise, saved in the browser. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 1.1</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <article class="pcard" style="--i:2">
+    <div class="hd"><span class="pnum">1.2</span><span class="ttl"><b>The session to beat</b><i>your last best, always visible</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>For each exercise, show my best previous set as a quiet "to beat" line under its
+name. The moment a new set matches or beats it, fill that set's pill with mint and
+flip the text to ink — winning should be impossible to miss. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 1.2</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <article class="pcard" style="--i:3">
+    <div class="hd"><span class="pnum">1.3</span><span class="ttl"><b>The chart</b><i>the line that climbs</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>For each exercise add a clean mint line chart of my top set over time, drawn in
+plain SVG (no libraries — this has to work offline). Let me scrub it with my finger
+to read any past session. Under it, two quiet stats: best ever, and my current
+beat-last-time streak. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 1.3</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <!-- EP2 -->
+  <div class="sect">
+    <span class="k">Part 2 · the workout logger</span>
+    <h2>Grades every set, live</h2>
+  </div>
+
+  <article class="pcard" style="--i:4">
+    <div class="hd"><span class="pnum">2.1</span><span class="ttl"><b>Today's session</b><i>the full workout screen</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>Turn the "today" area into a full session: let me add several exercises to today,
+each as its own card, and log multiple sets under each. Under each exercise name
+put a tiny mono meta line, e.g. "LAST 85 KG · 4 SETS". Keep everything already
+built. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 2.1</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <article class="pcard" style="--i:5">
+    <div class="hd"><span class="pnum">2.2</span><span class="ttl"><b>Grade every set</b><i>instant feedback on save</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>The instant I log a set, grade it against my last time on that exercise.
+Beat it → the pill fills mint. An all-time record → it fills amber with a small
+"PR". Below last time → it stays quiet gray, never red, never shame. Add a soft,
+premium animation on the change. Make it feel alive but calm. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 2.2</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <article class="pcard" style="--i:6">
+    <div class="hd"><span class="pnum">2.3</span><span class="ttl"><b>Finish the day</b><i>save it · a small earned celebration</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>Add a primary "Finish" button that saves today's session and shows a short
+celebration screen: total sets and volume, plus anything I beat or PR'd today.
+Understated and earned — one soft mint flourish, not confetti spam. Then let me
+start a fresh day. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 2.3</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <!-- EP3 -->
+  <div class="sect">
+    <span class="k">Part 3 · the exercise library</span>
+    <h2>Teaches as you build</h2>
+  </div>
+
+  <article class="pcard" style="--i:7">
+    <div class="hd"><span class="pnum">3.1</span><span class="ttl"><b>The library</b><i>searchable · by muscle group</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>Add a searchable exercise library I can open while building my session — a panel
+that slides up, a search box on top, exercises grouped by muscle. Seed it with the
+classics (bench, squat, deadlift, rows, overhead press, curls, and a few more per
+group) so it is useful from minute one. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 3.1</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <article class="pcard" style="--i:8">
+    <div class="hd"><span class="pnum">3.2</span><span class="ttl"><b>Teach the move</b><i>how-to + muscle diagram</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>When I tap an exercise in the library, show a simple how-to — three short steps —
+and a small, clean diagram highlighting the muscle it works, drawn in plain SVG,
+so I learn the move as I pick it. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 3.2</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <article class="pcard" style="--i:9">
+    <div class="hd"><span class="pnum">3.3</span><span class="ttl"><b>Add and swap</b><i>into today, without losing history</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>Let me add an exercise from the library straight into today's session, and swap one
+exercise for another — a "swap" pill on each card — without ever losing my logged
+sets or my history. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy prompt 3.3</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <!-- CLOUD -->
+  <div class="sect">
+    <span class="k">The capstone · optional</span>
+    <h2>Back it up to the cloud</h2>
+    <p>Your logger already works and saves on your device. This last prompt makes it follow you across devices. It is the only step that needs an account (Supabase, free).</p>
+  </div>
+
+  <article class="pcard" style="--i:10">
+    <div class="hd"><span class="pnum">C</span><span class="ttl"><b>Cloud backup</b><i>Supabase · your data only</i></span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+    <div class="body"><pre>Now add Supabase cloud backup so my logger follows me across devices. Give me the
+SQL for one table, add a simple email sign-in, and scope every row to my own account
+with row-level security so no one else can ever see my data. Keep the browser save
+working as an offline fallback. Walk me through the Supabase setup step by step, like
+I have never used it. Keep it dead simple. Same theme.</pre>
+      <button class="copy-btn"><span class="ring"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy the capstone</button>
+      <div class="body-pad"></div>
+    </div>
+  </article>
+
+  <footer class="kit-foot">
+    <div class="foot-rule"></div>
+    <p class="foot-line">Built it? It is yours forever. Want it done for you?</p>
+    <p class="foot-cue"><span class="dot"></span>Patreon · the finished one is a single command</p>
+  </footer>
+
+</main>
+
+<script>
+  // accordion
+  document.querySelectorAll('.pcard .hd').forEach(function(h){
+    h.addEventListener('click', function(){ h.parentElement.classList.toggle('open'); });
+  });
+  // spark copy
+  document.querySelectorAll('.copy-btn').forEach(function(b){
+    b.addEventListener('click', function(e){
+      e.stopPropagation();
+      var pre = b.parentElement.querySelector('pre');
+      navigator.clipboard.writeText(pre.textContent.trim());
+      b.classList.remove('spark'); void b.offsetWidth; b.classList.add('spark','copied');
+      var t = b.childNodes[b.childNodes.length-1], p = t.textContent; t.textContent = ' Copied';
+      setTimeout(function(){ b.classList.remove('copied'); t.textContent = p; }, 1400);
+    });
+  });
+  // progress rail
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    document.getElementById('rail').style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%';
+  }, {passive:true});
+</script>
