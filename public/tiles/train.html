@@ -337,54 +337,15 @@
 
 <style>
   /* ====================================================================
-     TILE MOUNT — additive only. The verbatim logger above is untouched;
-     this wraps it behind the round TRAIN button so it drops into the
-     Train dashboard tile. Idle, the tile shows the button over the baked
-     mountains; tapping opens the exact .sheet over a light scrim.
+     TILE MOUNT — additive only. The verbatim logger above is untouched.
+     The logger renders as its OWN full page, not a scrim popup: opening the
+     Train tile lands straight on the .shell / .sheet over the baked
+     mountains, exactly like a real Vitality module. No round-button gate,
+     no translucent scrim. Persistence still swaps localStorage → the
+     sandboxed tile's Vitality bridge, wired in the script below.
      ================================================================= */
-
-  /* the compact tile face: a round, ghost-ring mint dumbbell button */
-  .train-trigger {
-    margin: auto; flex: none;
-    width: 44px; height: 44px; border-radius: 50%;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: rgba(110,231,183,.06); border: 1px solid var(--mint); color: var(--mint);
-    cursor: pointer; box-shadow: 0 0 22px rgba(110,231,183,.14);
-    transition: background .2s, box-shadow .3s, transform .15s var(--spring);
-  }
-  .train-trigger:hover { background: rgba(110,231,183,.12); box-shadow: 0 0 30px rgba(110,231,183,.26); }
-  .train-trigger:active { transform: scale(.92); }
-  .train-trigger svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-  body.logger-open .train-trigger { display: none; }
-
-  /* the overlay that carries the verbatim .shell / .sheet, hidden until opened.
-     z-index 56 sits above the lifted mountains (55) but below the logger's own
-     popups (60) and celebration (80), so history / tune / PR still stack right. */
-  .logger-overlay { position: fixed; inset: 0; z-index: 56; display: none; }
-  .logger-overlay.open {
-    display: flex; align-items: flex-start; justify-content: center;
-    padding: max(16px, env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom));
-    overflow-y: auto; background: rgba(0,0,0,.28);
-    animation: scrimIn .18s var(--ease);
-  }
-  .logger-overlay.open .shell { animation: shellRise .5s var(--spring) both; }
-  @keyframes shellRise { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
-
-  /* close affordance, pinned to the corner (the sheet can fill a phone width) */
-  .logger-close {
-    position: fixed; top: max(14px, env(safe-area-inset-top)); right: 14px; z-index: 57;
-    width: 40px; height: 40px; border-radius: 50%;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,.35); border: 1px solid var(--hair); color: var(--muted);
-    cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-    transition: color .15s, border-color .15s;
-  }
-  .logger-close:hover { color: var(--text); border-color: var(--mint); }
-  .logger-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .logger-overlay.open, .logger-overlay.open .shell { animation-duration: 0.01ms !important; }
-  }
+  /* .shell centers via the verbatim body{display:flex} + margin:auto; the
+     .sheet carries its own `rise` entrance from the logger CSS above. */
 </style>
 </head>
 <body>
@@ -395,33 +356,25 @@
   <div class="wb-particles"></div>
 </div>
 
-<!-- TILE FACE: the round TRAIN button that fills the Train slot idle. -->
-<button class="train-trigger" id="trainTrigger" type="button" data-no-vitality aria-label="Open the workout logger" title="Workout logger">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v8M6.5 9.5v5M17.5 9.5v5M20 8v8M6.5 12h11"/></svg>
-</button>
-
-<!-- OVERLAY: wraps the verbatim shell/sheet; opened by the trigger. -->
-<div class="logger-overlay" id="loggerOverlay">
-  <div class="shell">
-    <div class="sheet" id="sheet">
-      <div class="eyebrow">Today's session</div>
-      <div class="daytabs" id="daytabs"></div>
-      <div class="daydots" id="daydots"></div>
-      <div class="dayhead">
-        <h1 class="daytitle" id="daytitle">Push</h1>
-        <span class="daypill" id="daypill">Heavy</span>
-        <button class="moonbtn" id="moonbtn" title="Mark the whole day a rest day"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span>rest day</span></button>
-      </div>
-      <div class="progress" id="progress"><div class="ptrack"><div class="pfill" id="pfill"></div></div><div class="plabel" id="plabel"></div></div>
-      <div class="exwrap" id="exwrap"></div>
-      <div class="finishRow"><button class="finishBtn" id="finishBtn">finish session</button></div>
-      <button class="freshbtn" id="freshbtn">Start fresh</button>
-      <p class="store-note">Saved on this device. No account, no cloud, no internet needed.</p>
+<!-- The logger IS the page: the verbatim .shell / .sheet renders directly,
+     no round-button gate and no scrim overlay. Opening the Train tile lands
+     straight here, exactly like a real Vitality module opening its own page. -->
+<div class="shell">
+  <div class="sheet" id="sheet">
+    <div class="eyebrow">Today's session</div>
+    <div class="daytabs" id="daytabs"></div>
+    <div class="daydots" id="daydots"></div>
+    <div class="dayhead">
+      <h1 class="daytitle" id="daytitle">Push</h1>
+      <span class="daypill" id="daypill">Heavy</span>
+      <button class="moonbtn" id="moonbtn" title="Mark the whole day a rest day"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span>rest day</span></button>
     </div>
+    <div class="progress" id="progress"><div class="ptrack"><div class="pfill" id="pfill"></div></div><div class="plabel" id="plabel"></div></div>
+    <div class="exwrap" id="exwrap"></div>
+    <div class="finishRow"><button class="finishBtn" id="finishBtn">finish session</button></div>
+    <button class="freshbtn" id="freshbtn">Start fresh</button>
+    <p class="store-note">Saved on this device. No account, no cloud, no internet needed.</p>
   </div>
-  <button class="logger-close" id="loggerClose" type="button" data-no-vitality aria-label="Close the logger" title="Close">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-  </button>
 </div>
 
 <div id="popRoot"></div>
@@ -470,35 +423,10 @@ function makeStore(seedValue, bridge) {
   };
 }
 
-/* Wire the tile face → sheet overlay. Independent of the logger internals. */
-(function wireTileMount() {
-  const trigger = document.getElementById('trainTrigger');
-  const overlay = document.getElementById('loggerOverlay');
-  const closeBtn = document.getElementById('loggerClose');
-  const backdrop = document.getElementById('vt-backdrop');
-  const popRoot = document.getElementById('popRoot');
-  if (!trigger || !overlay) return;
-  const popOpen = () => !!(popRoot && popRoot.childElementCount);
-  function open() {
-    overlay.classList.add('open');
-    document.body.classList.add('logger-open');
-    if (backdrop) backdrop.classList.add('lift');       // mountains lifted behind
-    if (closeBtn) closeBtn.focus();
-  }
-  function close() {
-    if (popOpen()) return;                               // a logger popup owns this dismissal
-    overlay.classList.remove('open');
-    document.body.classList.remove('logger-open');
-    if (backdrop) backdrop.classList.remove('lift');
-    trigger.focus();
-  }
-  trigger.addEventListener('click', open);
-  if (closeBtn) closeBtn.addEventListener('click', close);
-  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay.classList.contains('open') && !popOpen()) close();
-  });
-})();
+/* No tile-face wiring: the logger IS the page now. The dashboard opens this
+   tile straight onto the .sheet — no round-button trigger, no scrim overlay.
+   The logger's own popups (history / tune / swap) still lift the mountains
+   behind themselves via the verbatim openPop()/closePop() below. */
 
 /* Hydrate the store (bridge or localStorage), then boot the verbatim logger. */
 (async function boot() {
