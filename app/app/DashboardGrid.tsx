@@ -129,9 +129,13 @@ function OpenTileOverlay({
   onClose: () => void
 }) {
   const winRef = useRef<Window | null>(null)
+  // The Train tile is a full page (the logger renders as its own page), so it
+  // opens edge-to-edge like a real Vitality module rather than in the centred
+  // card the other tiles use.
+  const full = slot.id === 'train'
   return (
     <div
-      className="openOverlay"
+      className={full ? 'openOverlay openFull' : 'openOverlay'}
       role="dialog"
       aria-modal="true"
       aria-label={slot.name}
@@ -139,7 +143,7 @@ function OpenTileOverlay({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="openCard">
+      <div className={full ? 'openCard openCardFull' : 'openCard'}>
         <div className="openTop">
           <span className="openTitle">{slot.name}</span>
           <button type="button" className="openClose" aria-label="Close" onClick={onClose}>
