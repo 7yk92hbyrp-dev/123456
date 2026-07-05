@@ -30,7 +30,7 @@
   html,body{background:var(--bg);min-height:100%}
   body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased;letter-spacing:-.006em;
     padding:34px 18px 90px;display:block;overflow-x:hidden}
-  body.rc-open{padding-bottom:190px}   /* ep4: room so the rest coach never covers the last set */
+  body.rc-open{padding-bottom:120px}   /* ep4: room so the rest coach never covers the last set */
 
   /* background: light at the top, gradient down to pure black, snowy particles */
   .atmos{position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -54,7 +54,7 @@
   .unit-opt:not(.on):hover{color:var(--muted-strong)}
 
   /* lift card */
-  .lift{margin-bottom:30px;opacity:0;transform:translateY(10px);animation:rise .6s var(--ease) forwards}
+  .lift{margin-bottom:30px;opacity:0;transform:translateY(10px);animation:rise .6s var(--ease) forwards;animation-delay:calc(var(--i,0)*60ms)}
   @keyframes rise{to{opacity:1;transform:none}}
   .lift-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--rule);padding-bottom:11px}
   .glyph{flex:none;width:20px;height:20px;color:var(--mint);opacity:.8;display:grid;place-items:center}
@@ -191,6 +191,52 @@
   .sheet-close{position:absolute;z-index:10;top:14px;right:14px;width:32px;height:32px;display:grid;place-items:center;background:rgba(255,255,255,.05);border:1px solid var(--rule-strong);border-radius:50%;color:var(--muted-strong);cursor:pointer;font-size:15px;line-height:1;transition:border-color .2s,color .2s}
   .sheet-close:hover{border-color:var(--mint);color:var(--fg)}
   .sheet-stats{display:flex;gap:18px;margin-top:8px}
+
+  /* ── first-run setup: your split, your numbers, from set one ── */
+  .su-veil{position:fixed;inset:0;z-index:200;background:
+    radial-gradient(ellipse 60% 40% at 50% 8%, rgba(110,231,183,.09), transparent 65%), #050807;
+    display:flex;align-items:center;justify-content:center;padding:26px 18px;overflow-y:auto;
+    opacity:0;animation:suFade .5s var(--ease) forwards}
+  .su-veil.off{opacity:1;animation:suOut .45s var(--ease) forwards;pointer-events:none}
+  @keyframes suFade{to{opacity:1}} @keyframes suOut{to{opacity:0}}
+  .su-wrap{width:100%;max-width:430px;text-align:center}
+  .su-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mint);
+    opacity:0;animation:suPop .6s cubic-bezier(.34,1.56,.64,1) .1s forwards}
+  .su-title{font-family:var(--serif);font-size:34px;line-height:1.02;margin:10px 0 8px;
+    opacity:0;animation:suPop .6s cubic-bezier(.34,1.56,.64,1) .18s forwards}
+  .su-sub{color:var(--muted-strong);font-size:14px;line-height:1.55;max-width:34ch;margin:0 auto 22px;
+    opacity:0;animation:suPop .6s cubic-bezier(.34,1.56,.64,1) .26s forwards}
+  .su-grid{display:grid;gap:12px;text-align:left}
+  .su-card{background:rgba(255,255,255,.02);border:1px solid var(--rule-strong);border-radius:18px;padding:16px 18px;
+    cursor:pointer;transition:border-color .25s,box-shadow .25s,transform .2s;
+    opacity:0;transform:translateY(14px);animation:suPop .6s cubic-bezier(.34,1.56,.64,1) forwards}
+  .su-card:nth-child(1){animation-delay:.36s}.su-card:nth-child(2){animation-delay:.46s}.su-card:nth-child(3){animation-delay:.56s}
+  .su-card:hover{border-color:rgba(110,231,183,.5);box-shadow:0 0 40px rgba(110,231,183,.08)}
+  .su-card:active{transform:scale(.985)}
+  .su-name{font-family:var(--serif);font-size:20px;margin-bottom:3px}
+  .su-line{color:var(--muted);font-size:12.5px;line-height:1.5;margin-bottom:9px}
+  .su-days{display:flex;flex-wrap:wrap;gap:6px}
+  .su-day{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mint);
+    border:1px solid rgba(110,231,183,.3);border-radius:999px;padding:4px 9px}
+  .su-ghost{display:block;margin:18px auto 0;background:none;border:none;cursor:pointer;
+    font-family:var(--serif);font-style:italic;font-size:15px;color:var(--muted-strong);
+    border-bottom:1px dashed rgba(255,255,255,.25);padding:2px 1px;transition:color .2s,border-color .2s;
+    opacity:0;animation:suPop .6s cubic-bezier(.34,1.56,.64,1) .66s forwards}
+  .su-ghost:hover{color:var(--mint);border-color:rgba(110,231,183,.5)}
+  .su-units{display:inline-flex;gap:4px;margin-top:20px;border:1px solid var(--rule-strong);border-radius:999px;padding:4px;
+    opacity:0;animation:suPop .6s cubic-bezier(.34,1.56,.64,1) .74s forwards}
+  .su-unit{appearance:none;border:0;background:none;color:var(--muted);font-family:var(--mono);font-size:10px;
+    letter-spacing:.16em;text-transform:uppercase;padding:7px 16px;border-radius:999px;cursor:pointer;transition:all .2s}
+  .su-unit.on{background:rgba(110,231,183,.14);color:var(--mint)}
+  @keyframes suPop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+  /* library rows drift in as a cozy stagger when the library opens */
+  .lib-row{animation:cozyItem .38s var(--spring) backwards;animation-delay:calc(var(--i,0)*28ms)}
+  /* new-day quick names */
+  .day-quick{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+  .day-chip{background:rgba(255,255,255,.03);border:1px solid var(--rule-strong);border-radius:999px;color:var(--muted-strong);
+    font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:8px 13px;cursor:pointer;
+    transition:border-color .18s var(--ease),color .18s var(--ease)}
+  .day-chip:hover{border-color:var(--mint);color:var(--mint)}
   .sheet-stat .k{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
   .sheet-stat .v{font-size:20px;font-weight:600;margin-top:5px} .sheet-stat .v.gold{color:var(--gold)} .sheet-stat .v.up{color:var(--mint-cool)}
 
@@ -565,38 +611,28 @@
   /* rest-timer (ep4): the rest coach, a floating clock that turns the pause
      between sets into coaching time. Lives outside render(), so it is never wiped. */
   .rest-coach{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:30;
-    width:min(420px,calc(100vw - 24px));transform:translateX(-50%) translateY(10px);
-    background:rgba(9,11,10,.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-    border:1px solid var(--rule-strong);border-radius:20px;padding:16px 16px 14px;
-    box-shadow:0 18px 50px -12px rgba(0,0,0,.72),0 0 0 1px rgba(110,231,183,.04);
+    width:min(430px,calc(100vw - 24px));transform:translateX(-50%) translateY(10px);
+    display:flex;align-items:center;gap:10px;
+    background:rgba(9,11,10,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border:1px solid rgba(110,231,183,.32);border-radius:999px;padding:12px 14px;
+    box-shadow:0 18px 50px -12px rgba(0,0,0,.72),0 0 0 1px rgba(110,231,183,.05);
     opacity:0;pointer-events:none;transition:opacity .28s var(--ease),transform .28s var(--ease)}
   .rest-coach.on{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
-  .rest-coach.go{border-color:rgba(241,207,122,.5);animation:rcGo 1.5s var(--ease) infinite}
-  .rc-x{position:absolute;top:9px;right:9px;width:26px;height:26px;border:none;background:transparent;
-    color:var(--muted);cursor:pointer;border-radius:50%;display:grid;place-items:center;transition:color .2s,background .2s}
+  .rest-coach.go{border-color:rgba(241,207,122,.55);animation:rcGo 1.5s var(--ease) infinite}
+  .rc-mid{flex:1;min-width:0;text-align:center}
+  .rc-time{font-family:var(--serif);font-style:italic;font-size:26px;line-height:1;color:var(--mint);font-variant-numeric:tabular-nums}
+  .rest-coach.go .rc-time{color:var(--gold)}
+  .rc-ex{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rest-coach.go .rc-ex{color:var(--gold)}
+  .rc-step{flex:none;background:transparent;border:1px solid var(--rule-strong);color:var(--fg);
+    font-size:13px;font-variant-numeric:tabular-nums;width:52px;height:38px;border-radius:999px;cursor:pointer;
+    transition:border-color .2s,color .2s}
+  .rc-step:hover{border-color:var(--mint);color:var(--mint)}
+  .rc-x{flex:none;width:30px;height:30px;border:none;background:transparent;color:var(--muted);cursor:pointer;
+    border-radius:50%;display:grid;place-items:center;transition:color .2s,background .2s}
   .rc-x svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
   .rc-x:hover{color:var(--fg);background:rgba(255,255,255,.05)}
-  .rc-main{display:flex;align-items:center;gap:15px}
-  .rc-ring{position:relative;width:70px;height:70px;flex:none}
-  .rc-ring svg{width:70px;height:70px;transform:rotate(-90deg)}
-  .rc-ring .rc-track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:5}
-  .rc-ring .rc-prog{fill:none;stroke:var(--mint);stroke-width:5;stroke-linecap:round;
-    stroke-dasharray:201;stroke-dashoffset:0;transition:stroke-dashoffset .95s linear,stroke .3s}
-  .rest-coach.go .rc-prog{stroke:var(--gold)}
-  .rc-time{position:absolute;inset:0;display:grid;place-items:center;font-variant-numeric:tabular-nums;
-    font-size:18px;font-weight:600;color:var(--fg)}
-  .rest-coach.go .rc-time{color:var(--gold);font-family:var(--serif);font-style:italic;font-size:19px}
-  .rc-body{flex:1;min-width:0}
-  .rc-eyebrow{font-family:var(--serif);font-style:italic;color:var(--mint);font-size:13px}
-  .rest-coach.go .rc-eyebrow{color:var(--gold)}
-  .rc-lift{font-weight:600;font-size:15.5px;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-  .rc-meta{color:var(--muted);font-size:12px;margin-top:2px;font-variant-numeric:tabular-nums;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rc-controls{display:flex;gap:8px;margin-top:13px;justify-content:center}
-  .rc-step{flex:none;background:var(--card);border:1px solid var(--rule-strong);color:var(--fg);
-    font-size:13px;font-variant-numeric:tabular-nums;padding:8px 12px;border-radius:999px;cursor:pointer;
-    transition:border-color .2s,background .2s}
-  .rc-step:hover{border-color:var(--mint)}
   .rc-ask{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;
     background:rgba(110,231,183,.06);border:1px solid rgba(110,231,183,.34);color:var(--mint);
     font-family:var(--serif);font-style:italic;font-size:14px;padding:8px 12px;border-radius:999px;
@@ -623,7 +659,8 @@
   .board-h1{font-family:var(--serif);font-size:40px;line-height:1.02;letter-spacing:-.01em}
   .board-sub{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--muted-strong);margin-top:6px}
   .board-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:16px;align-items:stretch}
-  .board-tile{position:relative;display:flex;flex-direction:column;text-align:left;background:var(--card);border:1px solid var(--rule-strong);border-radius:18px;min-height:158px;
+  .board-tile{opacity:0;transform:translateY(12px);animation:rise .55s var(--ease) forwards;
+    position:relative;display:flex;flex-direction:column;text-align:left;background:var(--card);border:1px solid var(--rule-strong);border-radius:18px;min-height:158px;
     padding:20px 20px 18px;cursor:pointer;overflow:hidden;color:var(--fg);font-family:var(--sans);
     opacity:0;transform:translateY(10px);animation:rise .55s var(--ease) forwards;
     transition:border-color .2s var(--ease),background .2s var(--ease),transform .15s var(--spring)}
@@ -783,22 +820,13 @@
 <!-- Episode 4 markup: the rest coach. A floating card that appears when you log a set:
      a countdown ring, the set you just did, and what is next. -->
 <div class="rest-coach" id="restCoach" hidden>
+  <button class="rc-step" id="rcMinus" aria-label="15 seconds less">&minus;15</button>
+  <div class="rc-mid">
+    <div class="rc-time" id="rcTime">0:00</div>
+    <div class="rc-ex" id="rcLiftName">Lift</div>
+  </div>
+  <button class="rc-step" id="rcPlus" aria-label="15 seconds more">+15</button>
   <button class="rc-x" id="rcDismiss" aria-label="Dismiss rest timer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  <div class="rc-main">
-    <div class="rc-ring">
-      <svg viewBox="0 0 70 70"><circle class="rc-track" cx="35" cy="35" r="32"/><circle class="rc-prog" id="rcProg" cx="35" cy="35" r="32"/></svg>
-      <div class="rc-time" id="rcTime">0:00</div>
-    </div>
-    <div class="rc-body">
-      <div class="rc-eyebrow" id="rcEyebrow">resting</div>
-      <div class="rc-lift" id="rcLiftName">Lift</div>
-      <div class="rc-meta" id="rcMeta"></div>
-    </div>
-  </div>
-  <div class="rc-controls">
-    <button class="rc-step" id="rcMinus" aria-label="15 seconds less">&minus;15s</button>
-    <button class="rc-step" id="rcPlus" aria-label="15 seconds more">+15s</button>
-  </div>
 </div>
 <!-- @episode-end:rest-timer -->
 
@@ -847,6 +875,14 @@
   // syncs across devices, untouched (backend.sql).
   const STORE = 'vitality.logger.v3';        // legacy flat v3 store (a bare LIFTS array), kept only to migrate
   const STORE2 = 'vitality.logger.v4';       // ep4/session: the split store. { days:[{id,name,lifts}], activeDayId }
+  // Only the lab exhibit (?demo=1) opens with the lively seeded split. A real
+  // person opens CLEAN and picks their own split: their lifts, their numbers,
+  // nothing pre-filled. Nobody ever inherits someone else's training data.
+  const DEMO_MODE = /[?&#]demo\b/.test(location.search + '&' + location.hash);
+  let FRESH_START = false;
+  // Entrances play when a day OPENS. Re-renders while logging must never
+  // replay them (cards restarting at opacity 0 reads as a blank-screen flash).
+  let liftAnimOnce = false;
   let DATA = null;                            // the whole split lives here; LIFTS below is a live ref to one day's lifts
   let LIFTS = [];                             // the ACTIVE day's lifts. Every Episode 1-3 lift function still reads/writes THIS array.
   // loadLog now hydrates a whole split. v4 first; else migrate a v3 flat list into a
@@ -860,7 +896,21 @@
         if (rawOld){ const a = JSON.parse(rawOld); if (Array.isArray(a) && a.length){ const id = uid(); DATA = { days: [{ id, name: 'Day 1', lifts: a }], activeDayId: id }; } }
       } catch(e){}
     }
-    if (!DATA || !Array.isArray(DATA.days) || !DATA.days.length) DATA = seedSplit();
+    // The old builds seeded demo data into REAL storage. If what we loaded is
+    // that exact seed fingerprint (Barbell bench 85 with the generated 6-step
+    // 72.5 history), it is not the user's training: wipe it and start them
+    // clean. A real person's data can never match this fingerprint.
+    if (!DEMO_MODE && DATA){
+      try {
+        const p = (DATA.days || []).find(x => x.name === 'Push');
+        const b = p && (p.lifts || []).find(l => l.name === 'Barbell bench');
+        if (b && b.weight === 85 && Array.isArray(b.history) && b.history.length === 6 && b.history[0] && b.history[0].w === 72.5) DATA = null;
+      } catch(e){}
+    }
+    if (!DATA || !Array.isArray(DATA.days) || !DATA.days.length){
+      if (DEMO_MODE){ DATA = seedSplit(); }
+      else { const id = uid(); DATA = { days:[{ id, name:'Day 1', lifts:[] }], activeDayId:id }; FRESH_START = true; }
+    }
     DATA.days.forEach(d => { if (!Array.isArray(d.lifts)) d.lifts = []; });         // a day always has a lifts array
     if (!DATA.days.find(d => d.id === DATA.activeDayId)) DATA.activeDayId = DATA.days[0].id;
     LIFTS = activeDay().lifts;
@@ -990,6 +1040,72 @@
 
   loadLog();
 
+  // ── first-run setup: nobody inherits anyone's split. They pick, blank, theirs. ──
+  const SPLIT_TEMPLATES = [
+    { key:'ppl', name:'Push · Pull · Legs', line:'The classic. Three training days and a rest day, balanced across everything.',
+      days:[ ['Push',['bench_bb','incl_db_press','standing_ohp','db_lat_raise','tri_pushdown']],
+             ['Pull',['pullup','bb_row','lat_pulldown','face_pull','bb_curl']],
+             ['Legs',['back_squat','rdl','leg_press','lying_leg_curl','calf_raise']],
+             ['Rest',[]] ] },
+    { key:'ul', name:'Upper · Lower', line:'Four lifts and up per day, two halves of the body, simple to run all year.',
+      days:[ ['Upper',['bench_bb','bb_row','standing_ohp','lat_pulldown','bb_curl','tri_pushdown']],
+             ['Lower',['back_squat','rdl','leg_press','lying_leg_curl','calf_raise']],
+             ['Rest',[]] ] },
+    { key:'full', name:'Full body', line:'Everything each visit. Perfect for two or three gym days a week.',
+      days:[ ['Full body A',['back_squat','bench_bb','bb_row','plank']],
+             ['Full body B',['rdl','standing_ohp','lat_pulldown','walking_lunge']],
+             ['Rest',[]] ] },
+  ];
+  function freshLift(key){
+    const e = libByKey[key]; if (!e) return null;
+    const d = tierDefaults(e.tier);
+    return { name:e.name, tier:e.tier, muscle:e.group, libKey:e.key, perHand:e.equip === 'dumbbell',
+      targetSets:d.targetSets, targetReps:d.targetReps, weight:d.weight, rest:150, hidden:false,
+      history:[], id:uid(), sets:blankSets(d.targetSets) };
+  }
+  function applyTemplate(tpl){
+    const days = tpl.days.map(([name, keys]) => ({ id:uid(), name, lifts: keys.map(freshLift).filter(Boolean) }));
+    DATA.days = days; DATA.activeDayId = days[0].id; LIFTS = activeDay().lifts; saveLog();
+  }
+  function openSetup(){
+    const veil = document.createElement('div');
+    veil.className = 'su-veil';
+    veil.innerHTML =
+      '<div class="su-wrap">' +
+        '<div class="su-eyebrow">First time · make it yours</div>' +
+        '<h1 class="su-title">Your split, your numbers.</h1>' +
+        '<p class="su-sub">Pick a starting shape. Every lift starts blank, so your history begins at your first set. Swap anything later.</p>' +
+        '<div class="su-grid">' +
+          SPLIT_TEMPLATES.map(t =>
+            '<div class="su-card" data-k="' + t.key + '">' +
+              '<div class="su-name">' + t.name + '</div>' +
+              '<div class="su-line">' + t.line + '</div>' +
+              '<div class="su-days">' + t.days.map(d => '<span class="su-day">' + d[0] + '</span>').join('') + '</div>' +
+            '</div>').join('') +
+        '</div>' +
+        '<div class="su-units"><button type="button" class="su-unit on" data-u="kg">kg</button><button type="button" class="su-unit" data-u="lb">lb</button></div>' +
+        '<button type="button" class="su-ghost">Start empty, I will build my own</button>' +
+      '</div>';
+    document.body.appendChild(veil);
+    let pickedUnit = 'kg';
+    veil.querySelectorAll('.su-unit').forEach(b => b.addEventListener('click', function(){
+      pickedUnit = b.dataset.u;
+      veil.querySelectorAll('.su-unit').forEach(x => x.classList.toggle('on', x === b));
+    }));
+    function close(){
+      setUnit(pickedUnit);
+      veil.classList.add('off');
+      setTimeout(() => veil.remove(), 500);
+      renderBoard(); render();
+    }
+    veil.querySelectorAll('.su-card').forEach(c => c.addEventListener('click', function(){
+      const tpl = SPLIT_TEMPLATES.find(t => t.key === c.dataset.k);
+      if (tpl) applyTemplate(tpl);
+      close();
+    }));
+    veil.querySelector('.su-ghost').addEventListener('click', close);
+  }
+
   const listEl = document.getElementById('list');
   const hiddenEl = document.getElementById('hidden');
 
@@ -1035,7 +1151,13 @@
   function render(){
     listEl.innerHTML = '';
     const visible = LIFTS.filter(l => !l.hidden);
-    visible.forEach(lift => listEl.appendChild(liftCard(lift)));
+    visible.forEach((lift, i) => {
+      const el = liftCard(lift);
+      if (liftAnimOnce) el.style.setProperty('--i', Math.min(i, 8));
+      else { el.style.animation = 'none'; el.style.opacity = '1'; el.style.transform = 'none'; }
+      listEl.appendChild(el);
+    });
+    liftAnimOnce = false;
     // an empty day gets one inviting card that leads straight to the library
     if (!visible.length){
       const empty = document.createElement('div');
@@ -1078,7 +1200,7 @@
         '<span class="sp"></span>' +
         '<button class="lift-x" title="Remove (kept, never deleted)"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
       '</div>' +
-      '<div class="lift-meta"><span class="tierchip">TIER ' + lift.tier + '</span> &middot; <b>' + lift.targetSets + ' &times; ' + lift.targetReps + '</b> &middot; last ' + wDisp(lift.weight) + ' ' + unit + '</div>' +
+      '<div class="lift-meta"><span class="tierchip">TIER ' + lift.tier + '</span> &middot; <b>' + lift.targetSets + ' &times; ' + lift.targetReps + '</b> &middot; ' + (lift.history && lift.history.length ? 'last ' + wDisp(lift.weight) + ' ' + unit : 'first time · set the mark') + '</div>' +
       '<div class="chips">' +
         '<button class="chip" data-act="swap">' + SVG(ICON.swap) + 'swap</button>' +
         '<button class="chip" data-act="history">' + SVG(ICON.history) + 'history</button>' +
@@ -1261,19 +1383,10 @@
 
   function rcPaint(){
     if (!rcLift) return;
-    const frac = rcTotal ? Math.max(0, rcRemain) / rcTotal : 0;
-    document.getElementById('rcProg').style.strokeDashoffset = (RC_C * (1 - frac)).toFixed(1);
     document.getElementById('rcLiftName').textContent = rcLift.name;
-    const u = uLabel(rcLift.perHand);
-    const nx = rcNext(rcLift);
-    const bump = rcLift.overload || null;
-    const last = 'last ' + wDisp(rcSet.weight) + ' ' + u + ' × ' + rcSet.reps;
-    document.getElementById('rcMeta').textContent = nx
-      ? last + '   ·   next ' + wDisp(nx.weight ?? (rcLift.weight + (bump ? (bump.weightKg || 0) : 0))) + ' ' + u + ' × ' + (nx.reps ?? (rcLift.targetReps + (bump ? (bump.reps || 0) : 0)))
-      : last + '   ·   last set of this lift';
-    const t = document.getElementById('rcTime'), eb = document.getElementById('rcEyebrow');
-    if (rcOver){ rcEl.classList.add('go'); t.textContent = 'GO'; eb.textContent = 'rest’s up'; }
-    else { rcEl.classList.remove('go'); t.textContent = rcFmt(rcRemain); eb.textContent = 'resting'; }
+    const t = document.getElementById('rcTime');
+    if (rcOver){ rcEl.classList.add('go'); t.textContent = 'GO'; }
+    else { rcEl.classList.remove('go'); t.textContent = rcFmt(rcRemain); }
   }
   function rcTick(){ rcRemain -= 1; if (rcRemain <= 0 && !rcOver) rcFinish(); rcPaint(); }
   function rcFinish(){
@@ -1752,8 +1865,9 @@
     });
     render(); closeLibrary();
   }
-  function openLibrary(){ libMode='add'; libSwapTarget=null; buildLibraryShell(); renderLibRows(''); document.body.classList.add('lib-browsing'); libOverlay.classList.add('on'); }
-  function openLibrarySwap(lift){ libMode='swap'; libSwapTarget=lift; buildLibraryShell(); renderLibRows(''); document.body.classList.add('lib-browsing'); libOverlay.classList.add('on'); }
+  let libAnimOnce = false;
+  function openLibrary(){ libMode='add'; libSwapTarget=null; buildLibraryShell(); libAnimOnce = true; renderLibRows(''); document.body.classList.add('lib-browsing'); libOverlay.classList.add('on'); }
+  function openLibrarySwap(lift){ libMode='swap'; libSwapTarget=lift; buildLibraryShell(); libAnimOnce = true; renderLibRows(''); document.body.classList.add('lib-browsing'); libOverlay.classList.add('on'); }
   function closeLibrary(){ libOverlay.classList.remove('on'); document.body.classList.remove('lib-browsing'); libMode='add'; libSwapTarget=null; }
   function buildLibraryShell(){
     const swap = libMode === 'swap';
@@ -1807,6 +1921,9 @@
     const list = document.getElementById('libList');
     list.innerHTML = createRow + html;
     if (!html && !createRow) list.innerHTML = '<div class="lib-empty">No lifts match that.</div>';
+    // cozy stagger only on open; retyping a search repaints instantly
+    if (libAnimOnce){ libAnimOnce = false; list.querySelectorAll('.lib-row').forEach((r, i) => r.style.setProperty('--i', Math.min(i, 14))); }
+    else list.querySelectorAll('.lib-row').forEach(r => { r.style.animation = 'none'; });
     const create = document.getElementById('libCreate');
     if (create) create.onclick = () => {
       if (swap && libSwapTarget){
@@ -1989,6 +2106,23 @@
     svg += '</svg>';
     const old = plot.querySelector('svg'); if (old) old.remove();
     plot.insertAdjacentHTML('afterbegin', svg);
+    // the reveal: the line draws itself left to right, then the dots land on it
+    const lineEl = plot.querySelector('.ch-line');
+    if (lineEl && lineEl.getTotalLength){
+      const L = lineEl.getTotalLength();
+      lineEl.style.strokeDasharray = L; lineEl.style.strokeDashoffset = L;
+      requestAnimationFrame(() => {
+        lineEl.style.transition = 'stroke-dashoffset .85s cubic-bezier(.16,1,.3,1)';
+        lineEl.style.strokeDashoffset = '0';
+      });
+    }
+    plot.querySelectorAll('.ch-dot').forEach((d, i) => {
+      d.style.opacity = '0';
+      requestAnimationFrame(() => {
+        d.style.transition = 'opacity .45s ease ' + (0.3 + i * 0.05) + 's';
+        d.style.opacity = '';
+      });
+    });
     chRenderCaption(real);
   }
   function chScrubAt(clientX){
@@ -2201,7 +2335,7 @@
     VIEW = (v === 'day') ? 'day' : 'board';
     document.body.classList.toggle('view-board', VIEW === 'board');
     if (VIEW === 'board') renderBoard();
-    else { paintDayChrome(); render(); }
+    else { paintDayChrome(); liftAnimOnce = true; render(); }
   }
 
   // tap the big day title to rename it in place. Enter or tap-away commits,
@@ -2300,15 +2434,34 @@
   // add a new empty day, switch to it, and open the library right away: naming
   // can wait (tap the title any time), picking lifts is the actual job.
   function addDay(){
-    const id = uid();
-    DATA.days.push({ id, name: 'Day ' + (DATA.days.length + 1), lifts: [] });
-    DATA.activeDayId = id;
-    LIFTS = activeDay().lifts;
-    saveLog();
-    paintDayChrome();
-    render();
-    showView('day');
-    setTimeout(openLibrary, 240);   // let the day view land, then slide the library in
+    // the official naming moment: a day is born with a real name, not "Day 5"
+    openSheet(
+      '<div class="sheet-eyebrow">New day</div>' +
+      '<div class="sheet-title">Name your day</div>' +
+      '<div class="sheet-sub">Tap a name or type your own. You can rename it any time.</div>' +
+      '<div class="day-quick">' +
+        ['Push','Pull','Legs','Upper','Lower','Full body','Arms','Rest'].map(function(n){
+          return '<button class="day-chip" data-n="' + n + '">' + n + '</button>';
+        }).join('') +
+      '</div>' +
+      '<input class="add-input" id="dayNew" placeholder="Or type a name" maxlength="40" autocomplete="off">' +
+      '<div class="card-foot"><button class="btn-mint" id="dayCreate">Create the day</button></div>'
+    );
+    const inp = sheet.querySelector('#dayNew');
+    const create = (name) => {
+      const nm = (name || inp.value.trim() || ('Day ' + (DATA.days.length + 1)));
+      const id = uid();
+      DATA.days.push({ id, name: nm, lifts: [] });
+      DATA.activeDayId = id;
+      LIFTS = activeDay().lifts;
+      saveLog(); closeSheet(); paintDayChrome(); render();
+      showView('day');
+      setTimeout(openLibrary, 240);   // let the day view land, then slide the library in
+    };
+    sheet.querySelectorAll('.day-chip').forEach(c => { c.onclick = () => create(c.dataset.n); });
+    sheet.querySelector('#dayCreate').onclick = () => create();
+    inp.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); create(); } };
+    try { inp.focus(); } catch(e){}
   }
 
   // the tile "..." menu: rename inline, or remove the day (never the last one).
@@ -2431,6 +2584,15 @@
   document.getElementById('dayBack').onclick = () => showView('board');
   document.getElementById('settingsBtn').onclick = openSettings;
   showView('board');
+  // First open, nothing saved: they build THEIR split before they see a board.
+  if (FRESH_START) openSetup();
+  // The demo wears a tag so nobody ever mistakes example data for the product.
+  if (DEMO_MODE){
+    const tag = document.createElement('div');
+    tag.style.cssText = 'position:fixed;top:12px;right:12px;z-index:300;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#F59E0B;border:1px solid rgba(245,158,11,.4);border-radius:999px;padding:6px 11px;background:rgba(0,0,0,.6);pointer-events:none';
+    tag.textContent = 'Demo data · yours starts clean';
+    document.body.appendChild(tag);
+  }
   // @episode-end:session
 </script>
 
