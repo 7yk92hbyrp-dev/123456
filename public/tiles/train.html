@@ -1,0 +1,1955 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Workout</title>
+  <style>
+    /* ---- Theme tokens ---------------------------------------------------- */
+    :root {
+      --bg: #000000;
+      --mint: #6EE7B7;
+      --mint-soft: rgba(110, 231, 183, 0.10);
+      --amber: #FBBF24;
+      --amber-soft: rgba(251, 191, 36, 0.10);
+      --text: #FFFFFF;
+      --muted: rgba(255, 255, 255, 0.5);
+      --faint: rgba(255, 255, 255, 0.3);
+      --hairline: rgba(255, 255, 255, 0.08);
+      --card: rgba(255, 255, 255, 0.03);
+      --radius: 18px;
+      --pad: 20px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+    }
+
+    body {
+      font-family: inherit;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overscroll-behavior-y: none;
+    }
+
+    button {
+      font-family: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    button:active { opacity: 0.7; }
+
+    input {
+      font-family: inherit;
+      color: var(--text);
+      background: none;
+      border: none;
+      outline: none;
+    }
+
+    /* ---- App frame ------------------------------------------------------- */
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      padding: max(env(safe-area-inset-top), 8px) var(--pad)
+               calc(max(env(safe-area-inset-bottom), 12px) + 86px);
+      display: flex;
+      flex-direction: column;
+    }
+    .app.no-tabs { padding-bottom: max(env(safe-area-inset-bottom), 28px); }
+
+    main { flex: 1; display: flex; flex-direction: column; }
+
+    /* ---- Title bars ------------------------------------------------------ */
+    .titlebar { padding: 24px 4px 20px; }
+
+    .titlebar .eyebrow {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+      margin: 0 0 4px;
+    }
+
+    .titlebar h1 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .backbtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      min-height: 44px;
+      padding: 0 4px;
+      margin: 8px 0 0 -4px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .backbtn svg { display: block; }
+
+    /* ---- Cloud backup ------------------------------------------------------ */
+    .tb-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .cloud-btn {
+      width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--faint);
+      flex-shrink: 0;
+      margin: 10px -10px 0 0;
+    }
+    .cloud-btn.in { color: rgba(255, 255, 255, 0.65); }
+    .hint { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0 0 16px; }
+    .hint b { color: rgba(255, 255, 255, 0.75); font-weight: 600; }
+
+    /* ---- Tab bar ---------------------------------------------------------- */
+    .tabbar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 5;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--hairline);
+    }
+    .tabbar .inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding-bottom: max(env(safe-area-inset-bottom), 8px);
+    }
+    .tabbar button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 0 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--faint);
+      min-height: 58px;
+    }
+    .tabbar button.on { color: var(--text); }
+    .tabbar svg { display: block; }
+
+    /* ---- Cards ------------------------------------------------------------ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .card-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 0 0 14px;
+    }
+
+    /* ---- Lifts list -------------------------------------------------------- */
+    .ex-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 12px;
+      min-height: 76px;
+    }
+    .ex-row .ex-name { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .ex-row .ex-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .ex-row .ex-main { flex: 1; min-width: 0; }
+    .ex-row .ex-best { text-align: right; flex-shrink: 0; }
+    .ex-row .ex-best .num {
+      font-size: 20px; font-weight: 700; letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+    }
+    .ex-row .ex-best .lbl {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--faint); margin-top: 2px;
+    }
+    .ex-row .chev { color: var(--faint); flex-shrink: 0; }
+
+    /* ---- Buttons ----------------------------------------------------------- */
+    .btn-primary {
+      display: block;
+      width: 100%;
+      min-height: 56px;
+      border-radius: 16px;
+      background: var(--mint);
+      color: #000;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-outline {
+      display: block;
+      width: 100%;
+      min-height: 56px;
+      border-radius: 16px;
+      border: 1px solid var(--hairline);
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .btn-quiet {
+      display: block;
+      width: 100%;
+      min-height: 48px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--faint);
+      margin-top: 8px;
+    }
+
+    /* ---- Session (Today) cards ---------------------------------------------- */
+    .sess-card { padding: 6px 18px; }
+
+    .sess-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      padding: 14px 0;
+      min-height: 64px;
+    }
+    .sess-head .t { flex: 1; min-width: 0; }
+    .sess-head .nm { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .sess-head .sb { font-size: 13px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+    .icon-btn {
+      width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--faint);
+      flex-shrink: 0;
+      margin-right: -10px;
+    }
+
+    .sess-sets { padding-bottom: 6px; }
+    .sess-logger { padding: 4px 0 16px; }
+
+    /* ---- Set rows & badges ----------------------------------------------------- */
+    .set-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 4px 12px;
+      margin: 2px -12px;
+      border-radius: 12px;
+    }
+    .set-row .set-num {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+    }
+    .set-row .set-sp { flex: 1; }
+    .set-row .set-time {
+      font-size: 12px;
+      color: var(--faint);
+      font-variant-numeric: tabular-nums;
+    }
+    .set-row .set-del {
+      width: 44px;
+      min-height: 44px;
+      margin-right: -14px;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.22);
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border-radius: 999px;
+      padding: 4px 9px;
+      flex-shrink: 0;
+    }
+    .badge.pr    { color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.4); }
+    .badge.beat  { color: var(--mint);  border: 1px solid rgba(110, 231, 183, 0.4); }
+    .badge.quiet { color: var(--faint); border: 1px solid var(--hairline); }
+
+    .set-row.g-pr   { background: var(--amber-soft); }
+    .set-row.g-pr .set-num   { color: var(--amber); }
+    .set-row.g-beat { background: var(--mint-soft); }
+    .set-row.g-beat .set-num { color: var(--mint); }
+
+    @keyframes flashMint  { 0% { transform: scale(0.97); background: rgba(110, 231, 183, 0.30); } 100% { transform: scale(1); background: var(--mint-soft); } }
+    @keyframes flashAmber { 0% { transform: scale(0.97); background: rgba(251, 191, 36, 0.30); } 100% { transform: scale(1); background: var(--amber-soft); } }
+    @keyframes flashPlain { 0% { transform: scale(0.98); background: rgba(255, 255, 255, 0.08); } 100% { transform: scale(1); background: transparent; } }
+    .set-row.fl-beat  { animation: flashMint  0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .set-row.fl-pr    { animation: flashAmber 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .set-row.fl-quiet { animation: flashPlain 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+    /* ---- Logger fields ------------------------------------------------------------ */
+    .chip {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      border: 1px solid var(--hairline);
+      border-radius: 999px;
+      padding: 8px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .chip b {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .field { margin-bottom: 14px; }
+    .field-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+
+    .seg {
+      display: inline-flex;
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .seg button {
+      min-width: 44px;
+      min-height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--faint);
+    }
+    .seg button.on { background: rgba(255, 255, 255, 0.08); color: var(--text); }
+
+    .stepper { display: flex; align-items: stretch; gap: 10px; }
+    .stepper .stp {
+      width: 56px;
+      min-height: 54px;
+      flex-shrink: 0;
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .stepper input {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      min-height: 54px;
+    }
+
+    /* ---- Progress / chart ---------------------------------------------------- */
+    .readout { margin-bottom: 6px; }
+    .readout .ro-num {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--mint);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .readout .ro-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    .chart-wrap {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 4px -4px 6px;
+    }
+    .chart-wrap svg { display: block; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 16px;
+      border-top: 1px solid var(--hairline);
+    }
+    .stat .lbl {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 4px;
+    }
+    .stat .num {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat .num.win { color: var(--mint); }
+    .stat .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ---- History ---------------------------------------------------------------- */
+    .day-head {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 18px 0 4px;
+    }
+    .day-head:first-child { margin-top: 0; }
+
+    /* ---- Celebration -------------------------------------------------------------- */
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .rise { animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+    .cele-head { padding: 56px 4px 28px; }
+    .cele-head .eyebrow {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    .cele-head h1 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0;
+      line-height: 1.05;
+    }
+
+    .cele-vol { padding: 0 4px 28px; }
+    .cele-vol .num {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--mint);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .cele-vol .lbl { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+    .cele-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 56px;
+      padding: 8px 0;
+    }
+    .cele-row + .cele-row { border-top: 1px solid var(--hairline); }
+    .cele-row .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+    .cele-row .val {
+      font-size: 17px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    .cele-row .val .from {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--faint);
+      margin-right: 8px;
+    }
+    .cele-row .val.c-pr   { color: var(--amber); }
+    .cele-row .val.c-beat { color: var(--mint); }
+    .cele-row .sub { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+
+    /* ---- Empty state -------------------------------------------------------------- */
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+    .empty .empty-title { font-size: 17px; font-weight: 600; color: rgba(255, 255, 255, 0.7); }
+    .empty .empty-sub { font-size: 14px; max-width: 26ch; line-height: 1.4; }
+
+    .quiet-note {
+      font-size: 13px;
+      color: var(--faint);
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    /* ---- Bottom sheet --------------------------------------------------------------- */
+    .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 10; }
+    .sheet {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #000;
+      border: 1px solid var(--hairline);
+      border-bottom: none;
+      border-radius: 24px 24px 0 0;
+      padding: 24px var(--pad) max(env(safe-area-inset-bottom), 28px);
+      z-index: 11;
+      max-height: 80dvh;
+      overflow-y: auto;
+    }
+    .sheet h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 18px; }
+    .sheet .name-input {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      padding: 0 16px;
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .sheet .name-input::placeholder { color: var(--faint); font-weight: 400; }
+    .sheet .lib-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      gap: 12px;
+      min-height: 56px;
+      padding: 6px 2px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .sheet .lib-row .nm { flex: 1; font-size: 16px; font-weight: 600; }
+    .sheet .sect {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 18px 0 8px;
+    }
+    .sugg { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .sugg button {
+      border: 1px solid var(--hairline);
+      border-radius: 999px;
+      padding: 0 16px;
+      min-height: 42px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    /* ---- Exercise library ---------------------------------------------------------- */
+    .sheet.lib { padding-top: 0; }
+    .lib-head {
+      position: sticky;
+      top: 0;
+      background: #000;
+      padding: 22px 0 10px;
+      margin-bottom: 2px;
+      z-index: 3;
+    }
+    .lib-head h2 { margin: 0 0 12px; }
+    .lib-searchwrap { position: relative; }
+    .lib-search {
+      width: 100%;
+      min-height: 50px;
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      padding: 0 44px 0 16px;
+      font-size: 16px;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .lib-search::placeholder { color: var(--faint); font-weight: 400; }
+    .lib-searchwrap svg {
+      position: absolute;
+      right: 15px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--faint);
+      pointer-events: none;
+    }
+    .lib-row .grp { display: block; font-size: 12px; color: var(--faint); margin-top: 3px; font-weight: 500; }
+    .lib-row .go { color: var(--faint); flex-shrink: 0; }
+    .lib-empty { color: var(--muted); font-size: 14px; padding: 18px 2px; line-height: 1.4; }
+    .lib-create { margin-top: 14px; }
+
+    /* ---- Exercise info (how-to + diagram) ------------------------------------------- */
+    .info-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 40px;
+      margin: -2px 0 4px -2px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .info-title { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 3px; }
+    .info-sub { font-size: 13px; font-weight: 600; color: var(--mint); margin-bottom: 8px; }
+    .figs { display: flex; justify-content: center; gap: 26px; padding: 10px 0 16px; }
+    .fig { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+    .fig svg { height: 150px; width: auto; display: block; }
+    .fig .cap {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .how { list-style: none; counter-reset: step; padding: 0; margin: 4px 0 22px; }
+    .how li {
+      counter-increment: step;
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      padding: 12px 0;
+      border-top: 1px solid var(--hairline);
+      font-size: 15px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.85);
+    }
+    .how li:first-child { border-top: none; }
+    .how li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 26px; height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(110, 231, 183, 0.4);
+      color: var(--mint);
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .info-note { font-size: 14px; color: var(--muted); line-height: 1.4; padding: 6px 0 22px; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+
+  <script>
+  /* ====================================================================
+     VITALITY TILE BRIDGE — additive wrapper. The app below is VERBATIM from
+     index.html (same theme, every feature). Only its persistence is swapped:
+       • Sealed dashboard tile  → await window.Vitality.save(data) / .load()
+       • Opened on its own      → falls back to real localStorage on device
+     so the SAME file works in both places. Everything is inline; the sealed
+     tile makes no outside requests.
+     ================================================================= */
+  (function () {
+    var DATA_KEY = 'workout.v1';
+    var V = (typeof window !== 'undefined') ? window.Vitality : null;
+    var bridge = (V && typeof V.save === 'function' && typeof V.load === 'function') ? V : null;
+
+    // A localStorage-shaped store the verbatim app writes to. In the sealed
+    // tile real localStorage is blocked, so the main data blob mirrors to the
+    // host bridge; standalone this IS real localStorage (behavior unchanged).
+    function makeStore(seedMain) {
+      if (!bridge) return window.localStorage;
+      var mem = Object.create(null);
+      if (seedMain != null) mem[DATA_KEY] = seedMain;
+      return {
+        getItem: function (k) { return (k in mem) ? mem[k] : null; },
+        setItem: function (k, v) { mem[k] = String(v); if (k === DATA_KEY) { try { bridge.save(JSON.parse(mem[k])); } catch (e) {} } },
+        removeItem: function (k) { delete mem[k]; if (k === DATA_KEY) { try { bridge.save({}); } catch (e) {} } }
+      };
+    }
+
+    // Hydrate from the bridge (or fall through to localStorage) BEFORE the app's
+    // synchronous load() runs, so the app's own code stays unchanged.
+    async function boot() {
+      var seedMain = null;
+      if (bridge) {
+        try { var d = await bridge.load(); if (d && Array.isArray(d.exercises)) seedMain = JSON.stringify(d); } catch (e) {}
+      }
+      startApp(makeStore(seedMain));
+    }
+
+    /* ---- the app — VERBATIM from index.html. Its `localStorage` is the
+       parameter below, which shadows the global with the bridge-backed store. */
+    function startApp(localStorage) {
+  'use strict';
+
+  /* ============ Cloud backup — paste your two Supabase values here ============
+     1) Create a free project at supabase.com
+     2) Run the SQL in supabase-setup.sql (Dashboard → SQL Editor → Run)
+     3) Paste your Project URL and anon key below
+        (Dashboard → Project Settings → Data API)
+     The anon key is PUBLIC by design — safe to keep in this file. The SQL turns
+     on row-level security, so an account can only ever see its own row. */
+  const SUPABASE_URL = 'PASTE_YOUR_PROJECT_URL_HERE';   // e.g. 'https://abcdefgh.supabase.co'
+  const SUPABASE_ANON_KEY = 'PASTE_YOUR_ANON_KEY_HERE'; // the long "anon public" key
+
+  /* ================= Data ================= */
+
+  const KEY = 'workout.v1';
+  const SUGGESTIONS = ['Bench Press', 'Squat', 'Deadlift', 'Overhead Press', 'Barbell Row', 'Pull-Up'];
+
+  // Ordered muscle groups for the library.
+  const GROUPS = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
+
+  // Built-in exercise library: name, group, worked muscles (diagram keys), a one-line
+  // muscle summary, and a 3-step how-to. Muscle keys map to regions in bodyDiagram().
+  const CATALOG = [
+    // ---- Chest ----
+    { name: 'Bench Press', group: 'Chest', muscles: ['chest', 'triceps'], sub: 'Chest · Triceps',
+      how: ['Lie flat and grip the bar just wider than your shoulders.', 'Lower it to your mid-chest with elbows tucked to about 45°.', 'Press up and slightly back until your arms lock out.'] },
+    { name: 'Incline Bench Press', group: 'Chest', muscles: ['chest', 'delts'], sub: 'Upper Chest · Shoulders',
+      how: ['Set the bench to about 30° and grip slightly wider than your shoulders.', 'Lower the bar to your upper chest.', 'Drive up until your arms are straight over your collarbone.'] },
+    { name: 'Dumbbell Press', group: 'Chest', muscles: ['chest', 'triceps'], sub: 'Chest · Triceps',
+      how: ['Lie back holding a dumbbell in each hand at chest level.', 'Press both up until they nearly touch overhead.', 'Lower under control until you feel a stretch.'] },
+    { name: 'Push-Up', group: 'Chest', muscles: ['chest', 'triceps', 'abs'], sub: 'Chest · Core',
+      how: ['Hands under your shoulders, body in one straight line.', 'Lower until your chest is just above the floor.', 'Push back up without letting your hips sag.'] },
+    { name: 'Chest Fly', group: 'Chest', muscles: ['chest'], sub: 'Chest',
+      how: ['Lie back holding a dumbbell in each hand above your chest.', 'Open your arms wide in an arc with a slight elbow bend.', 'Squeeze your chest to bring them back together.'] },
+    { name: 'Dip', group: 'Chest', muscles: ['chest', 'triceps'], sub: 'Lower Chest · Triceps',
+      how: ['Support yourself on parallel bars with arms straight.', 'Lean forward slightly and lower until your elbows reach ~90°.', 'Press back up to the top.'] },
+    // ---- Back ----
+    { name: 'Deadlift', group: 'Back', muscles: ['lowerback', 'glutes', 'hams', 'traps'], sub: 'Posterior Chain',
+      how: ['Stand mid-foot under the bar, gripping just outside your shins.', 'Brace, keep a flat back, and drive the floor away.', 'Stand tall, then lower the bar along your legs.'] },
+    { name: 'Barbell Row', group: 'Back', muscles: ['lats', 'traps', 'biceps'], sub: 'Back · Biceps',
+      how: ['Hinge forward with a flat back, the bar hanging at your knees.', 'Pull it to your lower ribs, leading with your elbows.', 'Lower under control and repeat.'] },
+    { name: 'Pull-Up', group: 'Back', muscles: ['lats', 'biceps'], sub: 'Lats · Biceps',
+      how: ['Hang from the bar with an overhand, shoulder-width grip.', 'Pull your chest toward the bar, driving your elbows down.', 'Lower all the way back to a full hang.'] },
+    { name: 'Lat Pulldown', group: 'Back', muscles: ['lats', 'biceps'], sub: 'Lats · Biceps',
+      how: ['Sit with your thighs anchored, gripping the bar wider than your shoulders.', 'Pull it to your upper chest, squeezing your back.', 'Let it rise back up under control.'] },
+    { name: 'Seated Row', group: 'Back', muscles: ['lats', 'traps', 'biceps'], sub: 'Back · Biceps',
+      how: ['Sit tall holding the handle, a slight bend in your knees.', 'Pull to your stomach, driving your elbows back.', 'Extend your arms without rounding your back.'] },
+    { name: 'Face Pull', group: 'Back', muscles: ['delts', 'traps'], sub: 'Rear Delts · Traps',
+      how: ['Set a cable at face height with a rope handle.', 'Pull toward your forehead, splitting the rope apart.', 'Squeeze your rear shoulders, then return slowly.'] },
+    // ---- Legs ----
+    { name: 'Squat', group: 'Legs', muscles: ['quads', 'glutes'], sub: 'Quads · Glutes',
+      how: ['Rest the bar on your upper back, feet shoulder-width.', 'Sit down and back until your thighs reach parallel.', 'Drive up through your heels to stand.'] },
+    { name: 'Front Squat', group: 'Legs', muscles: ['quads', 'abs'], sub: 'Quads · Core',
+      how: ['Rack the bar across the front of your shoulders, elbows high.', 'Squat straight down, keeping your torso upright.', 'Stand back up, keeping your chest tall.'] },
+    { name: 'Leg Press', group: 'Legs', muscles: ['quads', 'glutes'], sub: 'Quads · Glutes',
+      how: ['Sit with your feet shoulder-width on the platform.', 'Lower until your knees reach about 90°.', 'Press back up without locking out hard.'] },
+    { name: 'Romanian Deadlift', group: 'Legs', muscles: ['hams', 'glutes', 'lowerback'], sub: 'Hamstrings · Glutes',
+      how: ['Hold the bar at your hips, knees slightly bent.', 'Push your hips back, lowering the bar down your legs.', 'Feel the hamstring stretch, then pull your hips forward.'] },
+    { name: 'Lunge', group: 'Legs', muscles: ['quads', 'glutes'], sub: 'Quads · Glutes',
+      how: ['Step forward into a split stance.', 'Lower until both knees are about 90°.', 'Push through your front heel back to standing.'] },
+    { name: 'Leg Curl', group: 'Legs', muscles: ['hams'], sub: 'Hamstrings',
+      how: ['Lie or sit with the pad against your lower calves.', 'Curl your heels toward your glutes.', 'Lower slowly to a full stretch.'] },
+    { name: 'Calf Raise', group: 'Legs', muscles: ['calves'], sub: 'Calves',
+      how: ['Stand with the balls of your feet on an edge.', 'Rise up onto your toes as high as you can.', 'Lower your heels below the step for a full stretch.'] },
+    // ---- Shoulders ----
+    { name: 'Overhead Press', group: 'Shoulders', muscles: ['delts', 'triceps'], sub: 'Shoulders · Triceps',
+      how: ['Hold the bar at your collarbone, hands just outside your shoulders.', 'Press straight overhead, moving your head back slightly.', 'Lock out with the bar over your ears, then lower.'] },
+    { name: 'Dumbbell Shoulder Press', group: 'Shoulders', muscles: ['delts', 'triceps'], sub: 'Shoulders · Triceps',
+      how: ['Sit holding a dumbbell at each shoulder.', 'Press both overhead until they nearly meet.', 'Lower under control to ear height.'] },
+    { name: 'Lateral Raise', group: 'Shoulders', muscles: ['delts'], sub: 'Side Delts',
+      how: ['Stand holding a dumbbell in each hand at your sides.', 'Raise them out to the sides to shoulder height.', 'Lower slowly, leading with your elbows.'] },
+    { name: 'Rear Delt Fly', group: 'Shoulders', muscles: ['delts', 'traps'], sub: 'Rear Delts',
+      how: ['Hinge forward holding a dumbbell in each hand.', 'Raise your arms out to the sides, squeezing your shoulder blades.', 'Lower under control.'] },
+    { name: 'Arnold Press', group: 'Shoulders', muscles: ['delts', 'triceps'], sub: 'Shoulders · Triceps',
+      how: ['Start with dumbbells at your chest, palms facing you.', 'Rotate and press overhead until your palms face forward.', 'Reverse the path back to the start.'] },
+    // ---- Arms ----
+    { name: 'Barbell Curl', group: 'Arms', muscles: ['biceps'], sub: 'Biceps',
+      how: ['Stand holding the bar with an underhand, shoulder-width grip.', 'Curl to your chest, keeping your elbows pinned.', 'Lower slowly without swinging.'] },
+    { name: 'Dumbbell Curl', group: 'Arms', muscles: ['biceps'], sub: 'Biceps',
+      how: ['Hold a dumbbell in each hand, arms at your sides.', 'Curl up, keeping your elbows still.', 'Lower all the way down.'] },
+    { name: 'Hammer Curl', group: 'Arms', muscles: ['biceps', 'forearms'], sub: 'Biceps · Forearms',
+      how: ['Hold the dumbbells with your palms facing each other.', 'Curl up, keeping that neutral grip.', 'Lower under control.'] },
+    { name: 'Tricep Pushdown', group: 'Arms', muscles: ['triceps'], sub: 'Triceps',
+      how: ['Grip a high cable with your elbows tucked at your sides.', 'Push down until your arms are straight.', 'Let it rise back up to about 90° only.'] },
+    { name: 'Skullcrusher', group: 'Arms', muscles: ['triceps'], sub: 'Triceps',
+      how: ['Lie back holding the bar over your forehead.', 'Bend at the elbows to lower it toward your head.', 'Extend back up, keeping your upper arms still.'] },
+    { name: 'Close-Grip Bench', group: 'Arms', muscles: ['triceps', 'chest'], sub: 'Triceps · Chest',
+      how: ['Lie back and grip the bar about shoulder-width.', 'Lower to your lower chest with your elbows tucked.', 'Press up, focusing on your triceps.'] },
+    // ---- Core ----
+    { name: 'Plank', group: 'Core', muscles: ['abs', 'obliques'], sub: 'Core',
+      how: ['Rest on your forearms and toes, body in a straight line.', 'Brace your abs and squeeze your glutes.', 'Hold steady, not letting your hips rise or drop.'] },
+    { name: 'Hanging Leg Raise', group: 'Core', muscles: ['abs'], sub: 'Lower Abs',
+      how: ['Hang from a bar with straight arms.', 'Raise your legs until they are at least parallel to the floor.', 'Lower slowly without swinging.'] },
+    { name: 'Cable Crunch', group: 'Core', muscles: ['abs'], sub: 'Abs',
+      how: ['Kneel below a high cable, holding the rope at your head.', 'Crunch down by rounding your spine, elbows toward your thighs.', 'Rise back up under control.'] },
+    { name: 'Russian Twist', group: 'Core', muscles: ['obliques', 'abs'], sub: 'Obliques',
+      how: ['Sit leaning back slightly with your feet off the floor.', 'Rotate your torso to tap the floor on each side.', 'Keep the motion controlled and steady.'] },
+  ];
+
+  // Small front/back figure with the worked muscles lit in mint.
+  function bodyDiagram(muscles) {
+    const on = new Set(muscles);
+    const c = k => (on.has(k) ? 'var(--mint)' : 'rgba(255, 255, 255, 0.08)');
+    const dim = 'rgba(255, 255, 255, 0.08)';
+    const ln = 'rgba(255, 255, 255, 0.16)';
+    const sw = 'stroke="rgba(255, 255, 255, 0.18)" stroke-width="0.8"';
+    const front = `
+      <svg viewBox="0 0 120 168" fill="none" aria-hidden="true">
+        <circle cx="60" cy="14" r="9" stroke="${ln}" stroke-width="1.4"/>
+        <rect x="55" y="21" width="10" height="7" rx="3" fill="${ln}"/>
+        <ellipse cx="41" cy="39" rx="10" ry="8" fill="${c('delts')}" ${sw}/>
+        <ellipse cx="79" cy="39" rx="10" ry="8" fill="${c('delts')}" ${sw}/>
+        <rect x="46" y="33" width="13" height="16" rx="5" fill="${c('chest')}" ${sw}/>
+        <rect x="61" y="33" width="13" height="16" rx="5" fill="${c('chest')}" ${sw}/>
+        <ellipse cx="32" cy="57" rx="6" ry="12" fill="${c('biceps')}" ${sw}/>
+        <ellipse cx="88" cy="57" rx="6" ry="12" fill="${c('biceps')}" ${sw}/>
+        <ellipse cx="27" cy="82" rx="5" ry="13" fill="${c('forearms')}" ${sw}/>
+        <ellipse cx="93" cy="82" rx="5" ry="13" fill="${c('forearms')}" ${sw}/>
+        <rect x="51" y="51" width="18" height="34" rx="5" fill="${c('abs')}" ${sw}/>
+        <rect x="44" y="53" width="6" height="27" rx="3" fill="${c('obliques')}" ${sw}/>
+        <rect x="70" y="53" width="6" height="27" rx="3" fill="${c('obliques')}" ${sw}/>
+        <rect x="49" y="90" width="11" height="35" rx="5" fill="${c('quads')}" ${sw}/>
+        <rect x="60" y="90" width="11" height="35" rx="5" fill="${c('quads')}" ${sw}/>
+        <rect x="50" y="127" width="9" height="30" rx="4" fill="${dim}" ${sw}/>
+        <rect x="61" y="127" width="9" height="30" rx="4" fill="${dim}" ${sw}/>
+      </svg>`;
+    const back = `
+      <svg viewBox="0 0 120 168" fill="none" aria-hidden="true">
+        <circle cx="60" cy="14" r="9" stroke="${ln}" stroke-width="1.4"/>
+        <rect x="55" y="21" width="10" height="7" rx="3" fill="${ln}"/>
+        <ellipse cx="41" cy="39" rx="10" ry="8" fill="${c('delts')}" ${sw}/>
+        <ellipse cx="79" cy="39" rx="10" ry="8" fill="${c('delts')}" ${sw}/>
+        <rect x="48" y="31" width="24" height="15" rx="6" fill="${c('traps')}" ${sw}/>
+        <polygon points="50,45 45,60 54,75 55,49" fill="${c('lats')}" ${sw}/>
+        <polygon points="70,45 75,60 66,75 65,49" fill="${c('lats')}" ${sw}/>
+        <ellipse cx="32" cy="57" rx="6" ry="12" fill="${c('triceps')}" ${sw}/>
+        <ellipse cx="88" cy="57" rx="6" ry="12" fill="${c('triceps')}" ${sw}/>
+        <ellipse cx="27" cy="82" rx="5" ry="13" fill="${dim}" ${sw}/>
+        <ellipse cx="93" cy="82" rx="5" ry="13" fill="${dim}" ${sw}/>
+        <rect x="52" y="72" width="16" height="14" rx="4" fill="${c('lowerback')}" ${sw}/>
+        <ellipse cx="54" cy="95" rx="8" ry="8" fill="${c('glutes')}" ${sw}/>
+        <ellipse cx="66" cy="95" rx="8" ry="8" fill="${c('glutes')}" ${sw}/>
+        <rect x="49" y="104" width="11" height="26" rx="5" fill="${c('hams')}" ${sw}/>
+        <rect x="60" y="104" width="11" height="26" rx="5" fill="${c('hams')}" ${sw}/>
+        <ellipse cx="54" cy="142" rx="5" ry="11" fill="${c('calves')}" ${sw}/>
+        <ellipse cx="66" cy="142" rx="5" ry="11" fill="${c('calves')}" ${sw}/>
+      </svg>`;
+    return `<div class="figs">
+      <div class="fig">${front}<span class="cap">Front</span></div>
+      <div class="fig">${back}<span class="cap">Back</span></div>
+    </div>`;
+  }
+
+  let db = load();
+
+  function load() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { /* corrupted — start fresh */ }
+    if (!d || !Array.isArray(d.exercises)) d = { exercises: [], unit: 'lb' };
+    // Migrations / defaults (Part 1 saves had no sessions or today)
+    d.unit = d.unit || 'lb';
+    d.sessions = Array.isArray(d.sessions) ? d.sessions : [];
+    d.today = d.today || null;
+    if (!d.view || d.view.name === 'home') d.view = { name: 'today' };
+    return d;
+  }
+
+  // persist() only writes to this device. save() also stamps the change time and
+  // schedules a cloud push — call it for every DATA change (sets, exercises, unit).
+  // Navigation uses persist() so switching tabs can never clobber newer cloud data.
+  function persist() { localStorage.setItem(KEY, JSON.stringify(db)); }
+  function save() { db.updatedAt = Date.now(); persist(); schedulePush(); }
+
+  /* ================= Cloud sync (Supabase, plain fetch — no SDK) ================= */
+
+  const SB_ON = SUPABASE_URL.indexOf('https://') === 0;
+  const SESS_KEY = 'workout.sb.session';
+  let sbSession = null;
+  try { sbSession = JSON.parse(localStorage.getItem(SESS_KEY)); } catch (e) { /* signed out */ }
+  let syncState = { status: 'idle', at: null, error: null };
+  let pushTimer = null;
+
+  function setSession(s) {
+    sbSession = s;
+    if (s) localStorage.setItem(SESS_KEY, JSON.stringify(s));
+    else localStorage.removeItem(SESS_KEY);
+  }
+
+  function adoptAuth(j) {
+    setSession({
+      access_token: j.access_token,
+      refresh_token: j.refresh_token,
+      expires_at: Date.now() + (j.expires_in - 60) * 1000,
+      email: j.user.email,
+      user_id: j.user.id,
+    });
+  }
+
+  async function sbAuth(path, body) {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/' + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error_description || j.msg || j.message || 'Could not reach the server');
+    return j;
+  }
+
+  // One button does both: sign in, or create the account the first time.
+  async function signInOrCreate(email, password) {
+    try {
+      adoptAuth(await sbAuth('token?grant_type=password', { email, password }));
+    } catch (e) {
+      let j;
+      try { j = await sbAuth('signup', { email, password }); }
+      catch (e2) {
+        throw new Error(/already/i.test(e2.message) ? 'Wrong password for this email.' : e2.message);
+      }
+      if (!j.access_token) throw new Error('Account created — check your inbox to confirm, then sign in again.');
+      adoptAuth(j);
+    }
+  }
+
+  async function freshToken() {
+    if (!sbSession) return null;
+    if (Date.now() < sbSession.expires_at) return sbSession.access_token;
+    try {
+      adoptAuth(await sbAuth('token?grant_type=refresh_token', { refresh_token: sbSession.refresh_token }));
+      return sbSession.access_token;
+    } catch (e) { setSession(null); return null; }
+  }
+
+  async function sbTable(method, query, body) {
+    const token = await freshToken();
+    if (!token) throw new Error('Signed out');
+    const res = await fetch(SUPABASE_URL + '/rest/v1/backups' + query, {
+      method,
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        Prefer: method === 'POST' ? 'resolution=merge-duplicates,return=minimal' : '',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) throw new Error('Sync failed (' + res.status + ')');
+    return method === 'GET' ? res.json() : null;
+  }
+
+  async function pushBackup() {
+    const data = Object.assign({}, db);
+    delete data.view; // which screen is open stays device-local
+    await sbTable('POST', '', [{ user_id: sbSession.user_id, data, updated_at: new Date().toISOString() }]);
+  }
+
+  // Pull the cloud copy; newer side wins (simple last-write-wins).
+  async function syncNow() {
+    if (!SB_ON || !sbSession) return;
+    syncState = { status: 'syncing', at: syncState.at, error: null };
+    try {
+      const rows = await sbTable('GET', '?select=data', null);
+      const remote = rows && rows[0] ? rows[0].data : null;
+      const remoteAt = remote && remote.updatedAt ? remote.updatedAt : 0;
+      const localAt = db.updatedAt || 0;
+      if (remote && remoteAt > localAt) {
+        remote.view = db.view; // keep this device's screen
+        db = remote;
+        persist();
+        render();
+      } else if (localAt > remoteAt) {
+        await pushBackup();
+      }
+      syncState = { status: 'ok', at: Date.now(), error: null };
+    } catch (e) {
+      syncState = { status: 'error', at: syncState.at, error: e.message };
+    }
+  }
+
+  // Debounced push ~1.5s after the last data change, so a burst of sets is one write.
+  function schedulePush() {
+    if (!SB_ON || !sbSession) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(async () => {
+      try { await pushBackup(); syncState = { status: 'ok', at: Date.now(), error: null }; }
+      catch (e) { syncState = { status: 'error', at: syncState.at, error: e.message }; }
+    }, 1500);
+  }
+
+  /* ---- Backup sheet (cloud icon in the title bar) ---- */
+
+  function cloudBtnHtml() {
+    return `<button class="cloud-btn ${sbSession ? 'in' : ''}" id="cloudBtn" aria-label="Backup">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M7 18.5h10a4 4 0 0 0 .8-7.92 5.5 5.5 0 0 0-10.63-1.9A4.75 4.75 0 0 0 7 18.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+    </button>`;
+  }
+
+  function wireCloud() {
+    const b = document.getElementById('cloudBtn');
+    if (b) b.addEventListener('click', openBackupSheet);
+  }
+
+  function openBackupSheet() {
+    const statusLine =
+      syncState.status === 'ok' && syncState.at ? 'Last synced ' + fmtTime(syncState.at)
+      : syncState.status === 'syncing' ? 'Syncing…'
+      : syncState.status === 'error' ? 'Sync issue — ' + syncState.error
+      : 'Waiting for first sync';
+
+    let inner;
+    if (!SB_ON) {
+      inner = `
+        <h2>Backup</h2>
+        <p class="hint">Backup is off, so your data lives only on this device for now.
+        To turn it on: create a free project at <b>supabase.com</b>, run the SQL in
+        <b>supabase-setup.sql</b>, then paste your Project URL and anon key at the top
+        of <b>index.html</b> (look for <b>PASTE_YOUR_PROJECT_URL_HERE</b>).</p>
+        <button class="btn-outline" id="bkClose">Close</button>`;
+    } else if (sbSession) {
+      inner = `
+        <h2>Backup</h2>
+        <p class="hint">Signed in as <b>${esc(sbSession.email)}</b><br>${esc(statusLine)}</p>
+        <button class="btn-primary" id="bkSync">Sync now</button>
+        <button class="btn-quiet" id="bkOut">Sign out</button>`;
+    } else {
+      inner = `
+        <h2>Backup</h2>
+        <p class="hint">One account, every device. First time? The same button creates your account.</p>
+        <input class="name-input" id="bkEmail" type="email" placeholder="Email" autocomplete="email" />
+        <input class="name-input" id="bkPass" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" />
+        <p class="hint" id="bkErr" style="display:none"></p>
+        <button class="btn-primary" id="bkIn">Sign in</button>`;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="overlay" id="ovl"></div><div class="sheet">${inner}</div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    const el = id => wrap.querySelector(id);
+    el('#ovl').addEventListener('click', close);
+
+    if (el('#bkClose')) el('#bkClose').addEventListener('click', close);
+
+    if (el('#bkSync')) el('#bkSync').addEventListener('click', async () => {
+      el('#bkSync').textContent = 'Syncing…';
+      await syncNow();
+      close();
+      openBackupSheet(); // reopen with fresh status
+    });
+
+    if (el('#bkOut')) el('#bkOut').addEventListener('click', () => {
+      setSession(null); // local data stays on the device
+      close();
+      render();
+    });
+
+    if (el('#bkIn')) el('#bkIn').addEventListener('click', async () => {
+      const email = el('#bkEmail').value.trim();
+      const pass = el('#bkPass').value;
+      const err = el('#bkErr');
+      if (!email || pass.length < 6) {
+        err.style.display = 'block';
+        err.textContent = 'Enter your email and a password of at least 6 characters.';
+        return;
+      }
+      el('#bkIn').textContent = 'Signing in…';
+      try {
+        await signInOrCreate(email, pass);
+        await syncNow();
+        close();
+        render();
+      } catch (e) {
+        el('#bkIn').textContent = 'Sign in';
+        err.style.display = 'block';
+        err.textContent = e.message;
+      }
+    });
+  }
+
+  function uid() {
+    return (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
+  }
+
+  function exById(id) { return db.exercises.find(e => e.id === id); }
+
+  // Active session for today; discards a stale unfinished session from a past day.
+  function todaySession() {
+    const key = dayKey(Date.now());
+    if (db.today && db.today.date !== key) { db.today = null; save(); }
+    return db.today;
+  }
+
+  /* ================= Scoring & derived state ================= */
+
+  // A set's strength score: estimated 1RM (Epley). Lets 100×8 fairly beat 105×1.
+  function score(s) { return s.reps <= 1 ? s.weight : s.weight * (1 + s.reps / 30); }
+
+  // Best set, optionally only counting sets strictly before a timestamp.
+  function bestSet(ex, beforeTs) {
+    let best = null;
+    for (const s of ex.sets) {
+      if (beforeTs !== undefined && s.ts >= beforeTs) continue;
+      if (!best || score(s) > score(best)) best = s;
+    }
+    return best;
+  }
+
+  function dayKey(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // Sessions = sets grouped by calendar day, oldest first, each with its top set.
+  function sessionsOf(ex) {
+    const map = new Map();
+    for (const s of ex.sets) {
+      const k = dayKey(s.ts);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k).push(s);
+    }
+    return [...map.entries()]
+      .map(([day, sets]) => ({
+        day,
+        sets: sets.sort((a, b) => a.ts - b.ts),
+        top: sets.reduce((a, b) => (score(b) > score(a) ? b : a)),
+      }))
+      .sort((a, b) => (a.day < b.day ? -1 : 1));
+  }
+
+  // Top set of the most recent session strictly before `day`. Null if none.
+  function lastTopBefore(ex, day) {
+    const prev = sessionsOf(ex).filter(s => s.day < day);
+    return prev.length ? prev[prev.length - 1].top : null;
+  }
+
+  // Consecutive sessions (ending at the latest) whose top set beat the session before.
+  function streakOf(sessions) {
+    let n = 0;
+    for (let i = sessions.length - 1; i > 0; i--) {
+      if (score(sessions[i].top) > score(sessions[i - 1].top)) n++;
+      else break;
+    }
+    return n;
+  }
+
+  // Grade one set against history at the moment it was logged.
+  //   pr    — beat the best set ever logged before it   (amber)
+  //   beat  — beat last session's top set               (mint)
+  //   first — nothing to compare against                (quiet)
+  //   solid — logged, didn't beat last time             (quiet)
+  function gradeSet(ex, s) {
+    const prevBest = bestSet(ex, s.ts);
+    if (!prevBest) return 'first';
+    if (score(s) > score(prevBest)) return 'pr';
+    const lastTop = lastTopBefore(ex, dayKey(s.ts));
+    if (lastTop && score(s) > score(lastTop)) return 'beat';
+    return 'solid';
+  }
+
+  const BADGE = {
+    pr:    '<span class="badge pr">PR</span>',
+    beat:  '<span class="badge beat">BEAT</span>',
+    solid: '<span class="badge quiet">SOLID</span>',
+    first: '<span class="badge quiet">FIRST</span>',
+  };
+
+  /* ================= Formatting ================= */
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function fmtW(w) { return Number.isInteger(w) ? String(w) : String(Math.round(w * 10) / 10); }
+
+  function fmtSet(s) { return fmtW(s.weight) + ' × ' + s.reps; }
+
+  function fmtDayLabel(key) {
+    const today = dayKey(Date.now());
+    const yest = dayKey(Date.now() - 86400000);
+    if (key === today) return 'Today';
+    if (key === yest) return 'Yesterday';
+    const [y, m, d] = key.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+    if (y !== new Date().getFullYear()) opts.year = 'numeric';
+    return dt.toLocaleDateString(undefined, opts);
+  }
+
+  function fmtTime(ts) {
+    return new Date(ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+
+  /* ================= Rendering ================= */
+
+  const app = document.getElementById('app');
+  let flashSetId = null;   // set id to pulse after logging
+  let expandedId = null;   // which today-card logger is open
+
+  function render() {
+    const v = db.view || { name: 'today' };
+    app.classList.toggle('no-tabs', v.name === 'done');
+    if (v.name === 'ex' && exById(v.id)) renderDetail(exById(v.id));
+    else if (v.name === 'lifts') renderLifts();
+    else if (v.name === 'done' && db.sessions.find(s => s.id === v.sid)) renderDone(db.sessions.find(s => s.id === v.sid));
+    else { db.view = { name: 'today' }; renderToday(); }
+  }
+
+  function go(view) { db.view = view; persist(); render(); window.scrollTo(0, 0); }
+
+  function tabbarHtml(active) {
+    return `
+      <nav class="tabbar"><div class="inner">
+        <button id="tabToday" class="${active === 'today' ? 'on' : ''}">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="8.25" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="11" cy="11" r="3.5" fill="currentColor"/>
+          </svg>
+          Today
+        </button>
+        <button id="tabLifts" class="${active === 'lifts' ? 'on' : ''}">
+          <svg width="24" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M1.5 12h2M20.5 12h2M7.5 12h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="4" y="6.5" width="3" height="11" rx="1.3" fill="currentColor"/>
+            <rect x="17" y="6.5" width="3" height="11" rx="1.3" fill="currentColor"/>
+          </svg>
+          Lifts
+        </button>
+      </div></nav>`;
+  }
+
+  function wireTabs() {
+    const t = document.getElementById('tabToday');
+    const l = document.getElementById('tabLifts');
+    if (t) t.addEventListener('click', () => go({ name: 'today' }));
+    if (l) l.addEventListener('click', () => go({ name: 'lifts' }));
+  }
+
+  /* ================= Today (session) ================= */
+
+  function todaySetsOf(ex) {
+    const key = dayKey(Date.now());
+    return ex.sets.filter(s => dayKey(s.ts) === key).sort((a, b) => a.ts - b.ts);
+  }
+
+  function renderToday() {
+    const dateStr = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    const sess = todaySession();
+    const exs = sess ? sess.exIds.map(exById).filter(Boolean) : [];
+    const totalSets = exs.reduce((n, ex) => n + todaySetsOf(ex).length, 0);
+    const savedToday = db.sessions.filter(s => s.date === dayKey(Date.now()));
+
+    const cards = exs.map(ex => {
+      const tSets = todaySetsOf(ex);
+      const best = bestSet(ex);
+      const lastTop = lastTopBefore(ex, dayKey(Date.now()));
+      const open = ex.id === expandedId;
+      const last = ex.sets.length ? ex.sets.reduce((a, b) => (b.ts > a.ts ? b : a)) : null;
+      const defW = last ? last.weight : 45;
+      const defR = last ? last.reps : 8;
+      const subBits = [];
+      if (lastTop) subBits.push('Last ' + fmtSet(lastTop));
+      if (best) subBits.push('Best ' + fmtSet(best));
+
+      return `
+      <section class="card sess-card" data-ex="${ex.id}">
+        <button class="sess-head" data-toggle="${ex.id}">
+          <div class="t">
+            <div class="nm">${esc(ex.name)}</div>
+            <div class="sb">${subBits.length ? subBits.join(' · ') : 'First time — set the bar'}</div>
+          </div>
+          <span class="icon-btn" data-chart="${ex.id}" role="button" aria-label="History &amp; chart">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3 14.5l4.2-5.2 3 3L16.8 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+        ${tSets.length ? `<div class="sess-sets">
+          ${tSets.map(s => {
+            const g = gradeSet(ex, s);
+            return `<div class="set-row g-${g} ${s.id === flashSetId ? (g === 'pr' ? 'fl-pr' : g === 'beat' ? 'fl-beat' : 'fl-quiet') : ''}">
+              <div class="set-num">${fmtSet(s)}</div>
+              ${BADGE[g]}
+              <div class="set-sp"></div>
+              <div class="set-time">${fmtTime(s.ts)}</div>
+              <button class="set-del" data-del="${s.id}" data-delex="${ex.id}" aria-label="Delete set">✕</button>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+        ${open ? `<div class="sess-logger">
+          <div class="field">
+            <div class="field-head"><span class="field-label">Weight (${esc(db.unit)})</span></div>
+            <div class="stepper">
+              <button class="stp" data-wm="${ex.id}">−</button>
+              <input id="w-${ex.id}" type="text" inputmode="decimal" value="${fmtW(defW)}" />
+              <button class="stp" data-wp="${ex.id}">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-head"><span class="field-label">Reps</span></div>
+            <div class="stepper">
+              <button class="stp" data-rm="${ex.id}">−</button>
+              <input id="r-${ex.id}" type="text" inputmode="numeric" value="${defR}" />
+              <button class="stp" data-rp="${ex.id}">+</button>
+            </div>
+          </div>
+          <button class="btn-primary" data-log="${ex.id}">Log set</button>
+          <button class="btn-quiet" data-swap="${ex.id}">Swap exercise</button>
+          ${!tSets.length ? `<button class="btn-quiet" data-remove="${ex.id}">Remove from today</button>` : ''}
+        </div>` : ''}
+      </section>`;
+    }).join('');
+
+    app.innerHTML = `
+      <header class="titlebar">
+        <div class="tb-row">
+          <div>
+            <p class="eyebrow">${esc(dateStr)}</p>
+            <h1>Today</h1>
+          </div>
+          ${cloudBtnHtml()}
+        </div>
+      </header>
+      <main>
+        ${exs.length ? cards : `
+          <div class="empty">
+            <div class="empty-title">${savedToday.length ? 'Session saved' : 'No session yet'}</div>
+            <div class="empty-sub">${savedToday.length
+              ? savedToday.reduce((n, s) => n + s.totals.sets, 0) + ' sets banked today. Room for more.'
+              : 'Add an exercise and log your first set.'}</div>
+          </div>`}
+        <button class="${exs.length ? 'btn-outline' : 'btn-primary'}" id="addToSession" style="margin-top:4px">Add exercise</button>
+        ${totalSets > 0 ? `<button class="btn-primary" id="finish" style="margin-top:12px">Finish session</button>` : ''}
+      </main>
+      ${tabbarHtml('today')}`;
+
+    wireTabs();
+    wireCloud();
+    document.getElementById('addToSession').addEventListener('click', openAddToSessionSheet);
+    const fin = document.getElementById('finish');
+    if (fin) fin.addEventListener('click', finishSession);
+
+    app.querySelectorAll('[data-toggle]').forEach(b =>
+      b.addEventListener('click', e => {
+        if (e.target.closest('[data-chart]')) return;
+        const id = b.dataset.toggle;
+        expandedId = (expandedId === id ? null : id);
+        render();
+      }));
+
+    app.querySelectorAll('[data-chart]').forEach(b =>
+      b.addEventListener('click', e => {
+        e.stopPropagation();
+        go({ name: 'ex', id: b.dataset.chart, from: 'today' });
+      }));
+
+    app.querySelectorAll('[data-log]').forEach(b =>
+      b.addEventListener('click', () => {
+        const ex = exById(b.dataset.log);
+        const w = Math.max(0, parseFloat(String(document.getElementById('w-' + ex.id).value).replace(',', '.')) || 0);
+        const r = Math.max(0, Math.round(parseFloat(document.getElementById('r-' + ex.id).value) || 0));
+        if (w <= 0 || r <= 0) return;
+        const s = { id: uid(), ts: Date.now(), weight: w, reps: r };
+        ex.sets.push(s);
+        flashSetId = s.id;
+        save();
+        render();
+        flashSetId = null;
+      }));
+
+    ['wm', 'wp', 'rm', 'rp'].forEach(k => {
+      app.querySelectorAll('[data-' + k + ']').forEach(b =>
+        b.addEventListener('click', () => {
+          const id = b.dataset[k];
+          const wEl = document.getElementById('w-' + id);
+          const rEl = document.getElementById('r-' + id);
+          const w = Math.max(0, parseFloat(String(wEl.value).replace(',', '.')) || 0);
+          const r = Math.max(0, Math.round(parseFloat(rEl.value) || 0));
+          if (k === 'wm') wEl.value = fmtW(Math.max(0, w - 2.5));
+          if (k === 'wp') wEl.value = fmtW(w + 2.5);
+          if (k === 'rm') rEl.value = Math.max(1, r - 1);
+          if (k === 'rp') rEl.value = r + 1;
+        }));
+    });
+
+    app.querySelectorAll('[data-del]').forEach(b =>
+      b.addEventListener('click', () => {
+        const ex = exById(b.dataset.delex);
+        ex.sets = ex.sets.filter(s => s.id !== b.dataset.del);
+        save();
+        render();
+      }));
+
+    app.querySelectorAll('[data-remove]').forEach(b =>
+      b.addEventListener('click', () => {
+        const sess = todaySession();
+        if (sess) {
+          sess.exIds = sess.exIds.filter(id => id !== b.dataset.remove);
+          if (!sess.exIds.length) db.today = null;
+          save();
+        }
+        render();
+      }));
+
+    app.querySelectorAll('[data-swap]').forEach(b =>
+      b.addEventListener('click', () => openSwapSheet(exById(b.dataset.swap))));
+  }
+
+  function addExerciseToSession(ex) {
+    let sess = todaySession();
+    if (!sess) { sess = db.today = { date: dayKey(Date.now()), exIds: [] }; }
+    if (!sess.exIds.includes(ex.id)) sess.exIds.push(ex.id);
+    expandedId = ex.id;
+    save();
+    render();
+  }
+
+  // Find a saved exercise by name; create it (preserving any existing history) if new.
+  function exByName(name) { return db.exercises.find(e => e.name.toLowerCase() === String(name).toLowerCase()); }
+  function ensureExercise(name) {
+    name = name.trim();
+    let ex = exByName(name);
+    if (!ex) { ex = { id: uid(), name, sets: [] }; db.exercises.push(ex); }
+    return ex;
+  }
+
+  /* ================= Exercise library ================= */
+
+  // Entry points — Today's "Add exercise" and Lifts' "New exercise".
+  function openAddToSessionSheet() {
+    openLibrary({ title: 'Add exercise', primaryLabel: 'Add to Today', onPick: addExerciseToSession });
+  }
+  function openNewExerciseSheet() {
+    openLibrary({ title: 'New exercise', primaryLabel: 'Add to Lifts', onPick: ex => go({ name: 'ex', id: ex.id, from: 'lifts' }) });
+  }
+
+  // Searchable library sheet. opts: { title, primaryLabel, onPick(ex), excludeId }.
+  function openLibrary(opts) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="overlay" id="ovl"></div><div class="sheet lib" id="sheet"></div>`;
+    document.body.appendChild(wrap);
+    const sheet = wrap.querySelector('#sheet');
+    const close = () => wrap.remove();
+    wrap.querySelector('#ovl').addEventListener('click', close);
+
+    let query = '';
+
+    // Catalog + any custom lifts not in the catalog, minus the excluded exercise.
+    function libEntries() {
+      const catNames = new Set(CATALOG.map(c => c.name.toLowerCase()));
+      const entries = CATALOG.map(c => ({ name: c.name, group: c.group }));
+      db.exercises.forEach(e => {
+        if (!catNames.has(e.name.toLowerCase())) entries.push({ name: e.name, group: 'Your lifts', custom: true });
+      });
+      const ex = opts.excludeId && exById(opts.excludeId);
+      return ex ? entries.filter(e => e.name.toLowerCase() !== ex.name.toLowerCase()) : entries;
+    }
+
+    function rowHtml(e, showGroup) {
+      return `<button class="lib-row" data-pick="${esc(e.name)}">
+        <span class="nm">${esc(e.name)}${showGroup ? `<span class="grp">${esc(e.group)}</span>` : ''}</span>
+        <svg class="go" width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>`;
+    }
+
+    function buildList() {
+      sheet.innerHTML = `
+        <div class="lib-head">
+          <h2>${esc(opts.title)}</h2>
+          <div class="lib-searchwrap">
+            <input class="lib-search" id="libQ" type="text" placeholder="Search exercises" autocomplete="off" />
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.6"/><path d="M11.5 11.5l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+        <div id="libList"></div>`;
+      const listEl = sheet.querySelector('#libList');
+      const inp = sheet.querySelector('#libQ');
+      inp.value = query;
+
+      function updateList() {
+        const entries = libEntries();
+        const byName = {};
+        entries.forEach(e => { byName[e.name.toLowerCase()] = e; });
+        const q = query.trim().toLowerCase();
+        const matched = q ? entries.filter(e => e.name.toLowerCase().includes(q) || (e.group || '').toLowerCase().includes(q)) : entries;
+
+        let html;
+        if (q) {
+          html = matched.length ? matched.map(e => rowHtml(e, true)).join('')
+                                : `<div class="lib-empty">No exercise matches “${esc(query.trim())}”.</div>`;
+          if (!matched.some(e => e.name.toLowerCase() === q))
+            html += `<button class="btn-outline lib-create" data-create="1">Create “${esc(query.trim())}”</button>`;
+        } else {
+          html = GROUPS.map(g => {
+            const rows = matched.filter(e => e.group === g);
+            return rows.length ? `<div class="sect">${g}</div>${rows.map(e => rowHtml(e, false)).join('')}` : '';
+          }).join('');
+          const custom = matched.filter(e => e.group === 'Your lifts');
+          if (custom.length) html += `<div class="sect">Your lifts</div>${custom.map(e => rowHtml(e, false)).join('')}`;
+        }
+        listEl.innerHTML = html;
+
+        listEl.querySelectorAll('[data-pick]').forEach(b =>
+          b.addEventListener('click', () => openInfo(byName[b.dataset.pick.toLowerCase()])));
+        const cr = listEl.querySelector('[data-create]');
+        if (cr) cr.addEventListener('click', () => { const ex = ensureExercise(query.trim()); close(); opts.onPick(ex); });
+      }
+
+      inp.addEventListener('input', () => { query = inp.value; updateList(); });
+      updateList();
+    }
+
+    // How-to + muscle diagram for one exercise, with the primary add/swap action.
+    function openInfo(entry) {
+      if (!entry) return;
+      const cat = CATALOG.find(c => c.name.toLowerCase() === entry.name.toLowerCase());
+      sheet.innerHTML = `
+        <button class="info-back" id="infoBack">
+          <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Library
+        </button>
+        <div class="info-title">${esc(entry.name)}</div>
+        ${cat ? `<div class="info-sub">${esc(cat.sub)}</div>` : ''}
+        ${cat ? bodyDiagram(cat.muscles) : ''}
+        ${cat ? `<ol class="how">${cat.how.map(h => `<li>${esc(h)}</li>`).join('')}</ol>`
+              : `<div class="info-note">A custom lift — no guide for this one, but its full history comes with it.</div>`}
+        <button class="btn-primary" id="infoPick">${esc(opts.primaryLabel)}</button>`;
+
+      sheet.querySelector('#infoBack').addEventListener('click', buildList);
+      sheet.querySelector('#infoPick').addEventListener('click', () => {
+        const ex = ensureExercise(entry.name);
+        close();
+        opts.onPick(ex);
+      });
+      sheet.scrollTop = 0;
+    }
+
+    buildList();
+    sheet.querySelector('#libQ').focus();
+  }
+
+  // Swap one session exercise for another, keeping today's logged sets and both histories.
+  function performSwap(fromEx, toEx) {
+    if (!fromEx || !toEx || fromEx.id === toEx.id) return;
+    const key = dayKey(Date.now());
+    // Today's sets move with the swap so nothing you just logged is lost.
+    const moving = fromEx.sets.filter(s => dayKey(s.ts) === key);
+    fromEx.sets = fromEx.sets.filter(s => dayKey(s.ts) !== key);
+    toEx.sets.push(...moving);
+    toEx.sets.sort((a, b) => a.ts - b.ts);
+
+    const sess = todaySession();
+    if (sess) {
+      const i = sess.exIds.indexOf(fromEx.id);
+      if (i >= 0) {
+        if (sess.exIds.includes(toEx.id)) sess.exIds.splice(i, 1); // target already present — drop the old slot
+        else sess.exIds[i] = toEx.id;
+      } else if (!sess.exIds.includes(toEx.id)) {
+        sess.exIds.push(toEx.id);
+      }
+    }
+    // Drop the old exercise only if the swap left it with no history at all.
+    if (fromEx.sets.length === 0) db.exercises = db.exercises.filter(e => e.id !== fromEx.id);
+
+    expandedId = toEx.id;
+    save();
+    render();
+  }
+
+  function openSwapSheet(fromEx) {
+    openLibrary({
+      title: 'Swap exercise',
+      primaryLabel: 'Swap to this',
+      excludeId: fromEx.id,
+      onPick: toEx => performSwap(fromEx, toEx),
+    });
+  }
+
+  /* ================= Finish & celebration ================= */
+
+  function finishSession() {
+    const sess = todaySession();
+    if (!sess) return;
+    const today = dayKey(Date.now());
+    const items = [];
+    const wins = [];
+    let totalSets = 0, volume = 0;
+
+    for (const id of sess.exIds) {
+      const ex = exById(id);
+      if (!ex) continue;
+      const tSets = todaySetsOf(ex);
+      if (!tSets.length) continue;
+      totalSets += tSets.length;
+      volume += tSets.reduce((v, s) => v + s.weight * s.reps, 0);
+      const top = tSets.reduce((a, b) => (score(b) > score(a) ? b : a));
+      items.push({
+        name: ex.name,
+        sets: tSets.map(s => ({ weight: s.weight, reps: s.reps, grade: gradeSet(ex, s) })),
+        top: { weight: top.weight, reps: top.reps },
+      });
+
+      // Wins: judged against everything before today.
+      const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+      const prevBest = bestSet(ex, startOfToday.getTime());
+      const lastTop = lastTopBefore(ex, today);
+      if (prevBest && score(top) > score(prevBest)) {
+        wins.push({ name: ex.name, type: 'pr', from: fmtSet(prevBest), to: fmtSet(top) });
+      } else if (lastTop && score(top) > score(lastTop)) {
+        wins.push({ name: ex.name, type: 'beat', from: fmtSet(lastTop), to: fmtSet(top) });
+      }
+    }
+
+    if (!totalSets) return;
+    wins.sort((a, b) => (a.type === b.type ? 0 : a.type === 'pr' ? -1 : 1));
+
+    const record = {
+      id: uid(),
+      ts: Date.now(),
+      date: today,
+      unit: db.unit,
+      totals: { sets: totalSets, volume: Math.round(volume), exercises: items.length },
+      items,
+      wins,
+    };
+    db.sessions.push(record);
+    db.today = null;
+    expandedId = null;
+    go({ name: 'done', sid: record.id });
+  }
+
+  function renderDone(rec) {
+    const d = 90; // stagger step, ms
+    app.innerHTML = `
+      <header class="cele-head rise">
+        <p class="eyebrow">Session complete</p>
+        <h1>${rec.wins.some(w => w.type === 'pr') ? 'New ground.' : rec.wins.length ? 'Forward again.' : 'Logged &amp; banked.'}</h1>
+      </header>
+      <main>
+        <div class="cele-vol rise" style="animation-delay:${d}ms">
+          <div class="num">${rec.totals.volume.toLocaleString()}</div>
+          <div class="lbl">${esc(rec.unit)} moved · ${rec.totals.sets} set${rec.totals.sets === 1 ? '' : 's'} · ${rec.totals.exercises} exercise${rec.totals.exercises === 1 ? '' : 's'}</div>
+        </div>
+
+        ${rec.wins.length ? `
+        <section class="card rise" style="animation-delay:${d * 2}ms">
+          <p class="card-label">You beat</p>
+          ${rec.wins.map(w => `
+            <div class="cele-row">
+              <div class="nm">${esc(w.name)}<div class="sub">${w.type === 'pr' ? 'All-time best' : 'Beat last time'}</div></div>
+              ${BADGE[w.type]}
+              <div class="val c-${w.type}"><span class="from">${w.from} →</span>${w.to}</div>
+            </div>`).join('')}
+        </section>` : `
+        <div class="quiet-note rise" style="animation-delay:${d * 2}ms">Nothing beaten today. It still counts — next time, take it back.</div>`}
+
+        <section class="card rise" style="animation-delay:${d * 3}ms">
+          <p class="card-label">Today's work</p>
+          ${rec.items.map(it => `
+            <div class="cele-row">
+              <div class="nm">${esc(it.name)}<div class="sub">${it.sets.length} set${it.sets.length === 1 ? '' : 's'}</div></div>
+              <div class="val">${fmtW(it.top.weight)} × ${it.top.reps}</div>
+            </div>`).join('')}
+        </section>
+
+        <div style="flex:1"></div>
+        <button class="btn-primary rise" id="doneBtn" style="animation-delay:${d * 4}ms">Done</button>
+      </main>`;
+
+    document.getElementById('doneBtn').addEventListener('click', () => go({ name: 'today' }));
+  }
+
+  /* ================= Lifts (library) ================= */
+
+  function renderLifts() {
+    const rows = db.exercises.map(ex => {
+      const best = bestSet(ex);
+      const sess = sessionsOf(ex);
+      return `
+        <button class="ex-row" data-open="${ex.id}">
+          <div class="ex-main">
+            <div class="ex-name">${esc(ex.name)}</div>
+            <div class="ex-sub">${ex.sets.length ? ex.sets.length + ' set' + (ex.sets.length === 1 ? '' : 's') + ' · ' + sess.length + ' session' + (sess.length === 1 ? '' : 's') : 'No sets yet'}</div>
+          </div>
+          ${best ? `<div class="ex-best"><div class="num">${fmtSet(best)}</div><div class="lbl">Best</div></div>` : ''}
+          <svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>`;
+    }).join('');
+
+    app.innerHTML = `
+      <header class="titlebar">
+        <div class="tb-row">
+          <div>
+            <p class="eyebrow">${db.exercises.length} lift${db.exercises.length === 1 ? '' : 's'}</p>
+            <h1>Lifts</h1>
+          </div>
+          ${cloudBtnHtml()}
+        </div>
+      </header>
+      <main>
+        ${db.exercises.length ? `<div>${rows}</div>` : `
+          <div class="empty">
+            <div class="empty-title">No lifts yet</div>
+            <div class="empty-sub">Add your first exercise from the Today tab, or create one here.</div>
+          </div>`}
+        <button class="btn-outline" id="addEx" style="margin-top:${db.exercises.length ? '8px' : '0'}">New exercise</button>
+      </main>
+      ${tabbarHtml('lifts')}`;
+
+    wireTabs();
+    wireCloud();
+    app.querySelectorAll('[data-open]').forEach(b =>
+      b.addEventListener('click', () => go({ name: 'ex', id: b.dataset.open, from: 'lifts' })));
+    document.getElementById('addEx').addEventListener('click', openNewExerciseSheet);
+  }
+
+  /* ================= Exercise detail (history + chart) ================= */
+
+  function renderDetail(ex) {
+    const from = (db.view && db.view.from) || 'lifts';
+    const best = bestSet(ex);
+    const sessions = sessionsOf(ex);
+    const streak = streakOf(sessions);
+    const last = ex.sets.length ? ex.sets.reduce((a, b) => (b.ts > a.ts ? b : a)) : null;
+    const defW = last ? last.weight : 45;
+    const defR = last ? last.reps : 8;
+
+    const historyHtml = [...sessions].reverse().map(sess => `
+      <div class="day-head">${fmtDayLabel(sess.day)}</div>
+      ${[...sess.sets].reverse().map(s => {
+        const g = gradeSet(ex, s);
+        return `<div class="set-row ${g === 'pr' ? 'g-pr' : g === 'beat' ? 'g-beat' : ''}">
+          <div class="set-num">${fmtSet(s)}</div>
+          ${g === 'pr' || g === 'beat' ? BADGE[g] : ''}
+          <div class="set-sp"></div>
+          <div class="set-time">${fmtTime(s.ts)}</div>
+          <button class="set-del" data-del="${s.id}" aria-label="Delete set">✕</button>
+        </div>`;
+      }).join('')}
+    `).join('');
+
+    app.innerHTML = `
+      <header class="titlebar" style="padding-top:8px">
+        <button class="backbtn" id="back">
+          <svg width="9" height="16" viewBox="0 0 9 16" fill="none"><path d="M8 1L2 8l6 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ${from === 'today' ? 'Today' : 'Lifts'}
+        </button>
+        <h1 style="margin-top:10px">${esc(ex.name)}</h1>
+      </header>
+      <main>
+        ${best ? `<div><span class="chip">Best to beat <b>${fmtSet(best)} ${esc(db.unit)}</b></span></div>` : ''}
+
+        <section class="card">
+          <p class="card-label">Log a set</p>
+          <div class="field">
+            <div class="field-head">
+              <span class="field-label">Weight</span>
+              <span class="seg">
+                <button id="unitLb" class="${db.unit === 'lb' ? 'on' : ''}">lb</button>
+                <button id="unitKg" class="${db.unit === 'kg' ? 'on' : ''}">kg</button>
+              </span>
+            </div>
+            <div class="stepper">
+              <button class="stp" id="wMinus">−</button>
+              <input id="wVal" type="text" inputmode="decimal" value="${fmtW(defW)}" />
+              <button class="stp" id="wPlus">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-head"><span class="field-label">Reps</span></div>
+            <div class="stepper">
+              <button class="stp" id="rMinus">−</button>
+              <input id="rVal" type="text" inputmode="numeric" value="${defR}" />
+              <button class="stp" id="rPlus">+</button>
+            </div>
+          </div>
+          <button class="btn-primary" id="logSet">Log set</button>
+        </section>
+
+        ${sessions.length ? `
+        <section class="card">
+          <p class="card-label">Top set over time</p>
+          <div class="readout">
+            <div class="ro-num" id="roNum"></div>
+            <div class="ro-sub" id="roSub"></div>
+          </div>
+          <div class="chart-wrap" id="chart"></div>
+          <div class="stats">
+            <div class="stat">
+              <div class="lbl">Best ever</div>
+              <div class="num">${fmtSet(best)}</div>
+              <div class="sub">${esc(db.unit)} × reps</div>
+            </div>
+            <div class="stat">
+              <div class="lbl">Streak</div>
+              <div class="num ${streak > 0 ? 'win' : ''}">${streak}</div>
+              <div class="sub">session${streak === 1 ? '' : 's'} beating the last</div>
+            </div>
+          </div>
+        </section>` : ''}
+
+        ${ex.sets.length ? `
+        <section class="card">
+          <p class="card-label">History</p>
+          ${historyHtml}
+        </section>` : `
+        <div class="quiet-note">No sets yet. Log the first one above.</div>`}
+
+        <button class="btn-quiet" id="delEx">Delete exercise</button>
+      </main>
+      ${tabbarHtml(from)}`;
+
+    wireTabs();
+    document.getElementById('back').addEventListener('click', () => go({ name: from }));
+
+    const wVal = document.getElementById('wVal');
+    const rVal = document.getElementById('rVal');
+    const readW = () => Math.max(0, parseFloat(String(wVal.value).replace(',', '.')) || 0);
+    const readR = () => Math.max(0, Math.round(parseFloat(rVal.value) || 0));
+
+    document.getElementById('wMinus').addEventListener('click', () => { wVal.value = fmtW(Math.max(0, readW() - 2.5)); });
+    document.getElementById('wPlus').addEventListener('click', () => { wVal.value = fmtW(readW() + 2.5); });
+    document.getElementById('rMinus').addEventListener('click', () => { rVal.value = Math.max(1, readR() - 1); });
+    document.getElementById('rPlus').addEventListener('click', () => { rVal.value = readR() + 1; });
+
+    document.getElementById('unitLb').addEventListener('click', () => { db.unit = 'lb'; save(); render(); });
+    document.getElementById('unitKg').addEventListener('click', () => { db.unit = 'kg'; save(); render(); });
+
+    document.getElementById('logSet').addEventListener('click', () => {
+      const w = readW(), r = readR();
+      if (w <= 0 || r <= 0) return;
+      ex.sets.push({ id: uid(), ts: Date.now(), weight: w, reps: r });
+      save();
+      render();
+    });
+
+    app.querySelectorAll('[data-del]').forEach(b =>
+      b.addEventListener('click', () => {
+        ex.sets = ex.sets.filter(s => s.id !== b.dataset.del);
+        save();
+        render();
+      }));
+
+    document.getElementById('delEx').addEventListener('click', () => {
+      if (confirm('Delete "' + ex.name + '" and all its sets?')) {
+        db.exercises = db.exercises.filter(e => e.id !== ex.id);
+        if (db.today) {
+          db.today.exIds = db.today.exIds.filter(id => id !== ex.id);
+          if (!db.today.exIds.length) db.today = null;
+        }
+        go({ name: from });
+      }
+    });
+
+    if (sessions.length) mountChart(document.getElementById('chart'), sessions);
+  }
+
+  /* ---- Chart: top set per session, scrubbable ---- */
+
+  function mountChart(el, sessions) {
+    const pts = sessions.map(s => ({ day: s.day, set: s.top, v: score(s.top) }));
+    const n = pts.length;
+    const W = Math.max(el.clientWidth, 200), H = 190;
+    const P = { l: 10, r: 10, t: 14, b: 14 };
+    const innerW = W - P.l - P.r, innerH = H - P.t - P.b;
+
+    let min = Math.min(...pts.map(p => p.v));
+    let max = Math.max(...pts.map(p => p.v));
+    if (min === max) { min -= 1; max += 1; }
+    const span = max - min;
+    min -= span * 0.12; max += span * 0.12;
+
+    const x = i => (n === 1 ? W / 2 : P.l + (i * innerW) / (n - 1));
+    const y = v => P.t + innerH - ((v - min) / (max - min)) * innerH;
+
+    const path = pts.map((p, i) => (i === 0 ? 'M' : 'L') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1)).join(' ');
+    const li = n - 1;
+
+    el.innerHTML = `
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+        ${n > 1 ? `<path d="${path}" fill="none" stroke="var(--mint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ''}
+        <line id="scrubLine" x1="0" x2="0" y1="${P.t - 6}" y2="${H - P.b + 6}" stroke="rgba(255,255,255,0.18)" stroke-width="1" visibility="hidden"/>
+        <circle id="lastDot" cx="${x(li).toFixed(1)}" cy="${y(pts[li].v).toFixed(1)}" r="4.5" fill="var(--mint)"/>
+        <circle id="scrubDot" r="6" fill="var(--mint)" stroke="#000" stroke-width="2.5" visibility="hidden"/>
+      </svg>`;
+
+    const svg = el.querySelector('svg');
+    const scrubLine = el.querySelector('#scrubLine');
+    const scrubDot = el.querySelector('#scrubDot');
+    const roNum = document.getElementById('roNum');
+    const roSub = document.getElementById('roSub');
+
+    function show(i, scrubbing) {
+      const p = pts[i];
+      roNum.textContent = fmtSet(p.set) + ' ' + db.unit;
+      roSub.textContent = fmtDayLabel(p.day) + ' · top set';
+      if (scrubbing) {
+        const px = x(i).toFixed(1), py = y(p.v).toFixed(1);
+        scrubLine.setAttribute('x1', px); scrubLine.setAttribute('x2', px);
+        scrubDot.setAttribute('cx', px); scrubDot.setAttribute('cy', py);
+        scrubLine.setAttribute('visibility', 'visible');
+        scrubDot.setAttribute('visibility', 'visible');
+      } else {
+        scrubLine.setAttribute('visibility', 'hidden');
+        scrubDot.setAttribute('visibility', 'hidden');
+      }
+    }
+
+    show(li, false); // resting state: latest session
+
+    function idxFromEvent(e) {
+      const rect = svg.getBoundingClientRect();
+      const rel = (e.clientX - rect.left - P.l) / (innerW || 1);
+      return Math.max(0, Math.min(n - 1, Math.round(rel * (n - 1))));
+    }
+
+    let active = false;
+    el.addEventListener('pointerdown', e => {
+      active = true;
+      el.setPointerCapture(e.pointerId);
+      show(idxFromEvent(e), true);
+    });
+    el.addEventListener('pointermove', e => { if (active) show(idxFromEvent(e), true); });
+    const end = () => { active = false; show(li, false); };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+  }
+
+  /* ================= Boot ================= */
+
+  render();
+  if (SB_ON && sbSession) syncNow();       // pull/push on launch
+  window.addEventListener('online', () => { if (SB_ON && sbSession) syncNow(); });
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>
